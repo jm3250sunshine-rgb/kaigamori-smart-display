@@ -1,0 +1,3471 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="robots" content="noindex">
+  <title>Kaigamori Smart Display UI</title>
+  <style>
+    /* ==========================================================================
+       RESET & BASE STYLES (iOS 12 Compatible - NO CSS gap used)
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0b0f19;
+      color: #ffffff;
+    }
+
+    /* Ambient Background Mesh Gradient */
+    .bg-gradient {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      background: radial-gradient(circle at 15% 20%, rgba(37, 99, 235, 0.25) 0%, transparent 45%),
+                  radial-gradient(circle at 85% 75%, rgba(147, 51, 234, 0.22) 0%, transparent 50%),
+                  radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.15) 0%, transparent 60%),
+                  #0b0f19;
+    }
+
+    /* Outer Wrapper */
+    .app-container {
+      position: relative;
+      z-index: 2;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      width: 100vw;
+      height: 100vh;
+      padding: 14px;
+    }
+
+    /* Glassmorphism Common Style */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.06);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      overflow: hidden;
+    }
+
+    /* Buttons */
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      color: #fff;
+      padding: 8px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      display: -webkit-inline-flex;
+      display: inline-flex;
+      -webkit-align-items: center;
+      align-items: center;
+      outline: none;
+      -webkit-transition: all 0.2s ease;
+      transition: all 0.2s ease;
+    }
+
+    .icon-btn:active {
+      background: rgba(255, 255, 255, 0.25);
+      -webkit-transform: scale(0.96);
+      transform: scale(0.96);
+    }
+
+    .icon-btn svg {
+      margin-right: 6px;
+    }
+
+    /* ==========================================================================
+       HEADER BAR
+       ========================================================================== */
+    .header-bar {
+      height: 48px;
+      margin-bottom: 10px;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      padding: 0 18px;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .header-left {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      background-color: #10b981;
+      border-radius: 50%;
+      margin-right: 10px;
+      box-shadow: 0 0 10px #10b981;
+    }
+
+    .app-title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .header-right {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+    }
+
+    .header-right > * {
+      margin-left: 10px;
+    }
+
+    .status-icon {
+      color: rgba(255, 255, 255, 0.7);
+      display: -webkit-inline-flex;
+      display: inline-flex;
+      -webkit-align-items: center;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .status-icon svg {
+      margin-right: 4px;
+    }
+
+    /* ==========================================================================
+       MAIN DASHBOARD GRID (NO CSS gap - Margin based spacing)
+       ========================================================================== */
+    .main-grid {
+      -webkit-flex: 1;
+      flex: 1;
+      display: -webkit-flex;
+      display: flex;
+      height: calc(100vh - 84px);
+    }
+
+    .grid-col {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .grid-left {
+      width: 50%;
+      margin-right: 12px;
+    }
+
+    .grid-right {
+      width: 50%;
+    }
+
+    /* Card Spacing Replacement for gap */
+    .card-space-bottom {
+      margin-bottom: 12px;
+    }
+
+    /* ==========================================================================
+       WIDGET 1: CLOCK & DUAL WEATHER (極大時計 ＆ 気温グラフ ＆ 降水確率下部天気マーク)
+       ========================================================================== */
+    .clock-weather-card {
+      padding: 18px 20px;
+      -webkit-flex: 1;
+      flex: 1;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+      position: relative;
+    }
+
+    .clock-weather-header {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .clock-left-group {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+    }
+
+    .clock-container {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: baseline;
+      align-items: baseline;
+    }
+
+    /* 遠くからでも超鮮明に見える大画面デジタル時計 */
+    .time-main {
+      font-size: 100px;
+      font-weight: 900;
+      line-height: 0.9;
+      letter-spacing: -2px;
+      font-variant-numeric: tabular-nums;
+      background: -webkit-linear-gradient(top, #ffffff, #e5e7eb);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 4px 25px rgba(0,0,0,0.6);
+    }
+
+    .time-seconds {
+      font-size: 38px;
+      font-weight: 700;
+      color: #3b82f6;
+      margin-left: 8px;
+    }
+
+    .date-display-row {
+      font-size: 24px;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.95);
+      margin-top: 10px;
+      letter-spacing: 0.5px;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      white-space: nowrap;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 8px;
+      width: 100%;
+    }
+
+    #clock-date-left {
+      white-space: nowrap;
+    }
+
+    /* 拡大版アナログ時計スタイル */
+    .analog-clock-box {
+      display: none;
+      -webkit-align-items: center;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+
+    .analog-clock-svg {
+      width: 220px;
+      height: 220px;
+      filter: drop-shadow(0 6px 18px rgba(0,0,0,0.5));
+    }
+
+    /* Weather Top Right Group & Non-Overflow Box */
+    .weather-right-group {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      -webkit-align-items: flex-end;
+      align-items: flex-end;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+      margin-left: 12px;
+    }
+
+    .date-display-top-right {
+      font-size: 20px;
+      font-weight: 800;
+      color: #60a5fa;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 12px;
+      padding: 4px 10px;
+    }
+
+    .weather-current-box {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      text-align: right;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      padding: 6px 12px;
+      white-space: nowrap;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .weather-icon-svg {
+      width: 38px;
+      height: 38px;
+      margin-right: 8px;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .weather-temp {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+      color: #ffffff;
+    }
+
+    .weather-condition {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-top: 2px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* Weather Dual Display Section & Mode Switcher */
+    .weather-switch-header {
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+    }
+
+    .weather-label-title-text {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .weather-dual-section {
+      margin-top: 4px;
+      padding-top: 4px;
+    }
+
+    .weather-label-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 2px;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+    }
+
+    /* SVG Temperature Trend Chart Styling */
+    .temp-chart-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0;
+    }
+
+    .temp-chart-svg {
+      width: 1280px;
+      min-width: 1280px;
+      height: 120px;
+    }
+
+    .weekly-rain {
+      font-size: 10px;
+      font-weight: 700;
+      color: #60a5fa;
+      margin-bottom: 2px;
+    }
+
+    /* Weekly Scroll Row */
+    .weekly-forecast-row {
+      display: -webkit-flex;
+      display: flex;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 4px;
+      width: 100%;
+    }
+
+    .weekly-pill {
+      min-width: 64px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 6px 4px;
+      margin-right: 8px;
+      text-align: center;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .weekly-day {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 2px;
+    }
+
+    .weekly-icon {
+      font-size: 16px;
+      margin: 2px 0;
+    }
+
+    .weekly-temp-range {
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .high-t { color: #f87171; }
+    .low-t { color: #60a5fa; }
+
+    /* ==========================================================================
+       WIDGET 2: COMPACT MUSIC & NHK RADIO MEDIA PLAYER
+       ========================================================================== */
+    .media-card-compact {
+      padding: 12px 16px;
+      height: 114px;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .media-top-row {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+    }
+
+    .media-left-group {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-flex: 1;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .album-art-small {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      object-fit: cover;
+      margin-right: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      background: linear-gradient(45deg, #1e293b, #334155);
+      position: relative;
+      overflow: hidden;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .album-art-fallback {
+      width: 100%;
+      height: 100%;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+    }
+
+    .radio-art-fallback {
+      background: linear-gradient(135deg, #ef4444, #f97316) !important;
+    }
+
+    .media-title-compact {
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #fff;
+    }
+
+    .media-artist-compact {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.65);
+      margin-top: 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .radio-selector-row {
+      display: -webkit-flex;
+      display: flex;
+      margin-top: 3px;
+    }
+
+    .radio-pill {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.7);
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-right: 4px;
+      cursor: pointer;
+    }
+
+    .radio-pill.active {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #60a5fa;
+      cursor: pointer;
+      box-shadow: 0 0 6px rgba(96, 165, 250, 0.8);
+    }
+
+    .inline-controls {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      margin-left: 8px;
+    }
+
+    .tab-pills {
+      display: -webkit-flex;
+      display: flex;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.65);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .tab-btn.active {
+      background: #3b82f6;
+      color: #ffffff;
+    }
+
+    .media-ctrl-btn-small {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.85);
+      cursor: pointer;
+      padding: 3px;
+      margin: 0 3px;
+      outline: none;
+      border-radius: 50%;
+      display: -webkit-inline-flex;
+      display: inline-flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: center;
+      justify-content: center;
+    }
+
+    .play-pause-btn-small {
+      width: 34px;
+      height: 34px;
+      background: #3b82f6;
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba(59, 130, 246, 0.5);
+    }
+
+    .radio-mode-btn {
+      background: #ef4444 !important;
+      box-shadow: 0 3px 10px rgba(239, 68, 68, 0.5) !important;
+    }
+
+    /* Progress Bar */
+    .progress-wrapper-compact {
+      margin-top: 4px;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      width: 42%;
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      border-radius: 2px;
+      -webkit-transition: width 0.1s linear;
+      transition: width 0.1s linear;
+    }
+
+    .radio-progress-fill {
+      width: 100% !important;
+      background: linear-gradient(90deg, #ef4444, #f97316) !important;
+    }
+
+    .time-labels-compact {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 2px;
+    }
+
+    /* ==========================================================================
+       WIDGET 3: PHOTO SLIDESHOW FRAME
+       ========================================================================== */
+    .photo-card {
+      height: 34%;
+      position: relative;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+    }
+
+    .photo-bg-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      -webkit-transition: opacity 1s ease-in-out, -webkit-transform 6s ease;
+      transition: opacity 1s ease-in-out, transform 6s ease;
+      -webkit-transform: scale(1);
+      transform: scale(1);
+    }
+
+    .photo-bg-slide.active {
+      opacity: 1;
+      -webkit-transform: scale(1.04);
+      transform: scale(1.04);
+    }
+
+    /* Overlay Shadow */
+    .photo-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0,0,0,0.7) 100%);
+      z-index: 1;
+    }
+
+    .photo-header {
+      position: relative;
+      z-index: 2;
+      padding: 10px 12px;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+    }
+
+    .photo-tag {
+      background: rgba(0, 0, 0, 0.4);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 3px 8px;
+      border-radius: 16px;
+      font-size: 11px;
+      font-weight: 500;
+      display: -webkit-inline-flex;
+      display: inline-flex;
+      -webkit-align-items: center;
+      align-items: center;
+    }
+
+    .photo-album-selector-row {
+      position: relative;
+      z-index: 2;
+      display: -webkit-flex;
+      display: flex;
+      padding: 0 12px;
+      margin-top: 4px;
+    }
+
+    .album-pill {
+      background: rgba(0, 0, 0, 0.45);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.85);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-right: 4px;
+      cursor: pointer;
+      outline: none;
+      -webkit-transition: all 0.2s ease;
+      transition: all 0.2s ease;
+    }
+
+    .album-pill:hover {
+      background: rgba(59, 130, 246, 0.4);
+      color: #ffffff;
+    }
+
+    .album-pill.active {
+      background: #3b82f6;
+      border-color: #3b82f6;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.5);
+    }
+
+    .photo-footer {
+      position: relative;
+      z-index: 2;
+      padding: 10px 12px;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: flex-end;
+      align-items: flex-end;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+    }
+
+    .photo-info-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    }
+
+    .photo-info-subtitle {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-top: 1px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+    }
+
+    .slideshow-controls {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.45);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      border-radius: 30px;
+      padding: 2px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .slide-ctrl-btn {
+      background: transparent;
+      border: none;
+      color: #fff;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: -webkit-inline-flex;
+      display: inline-flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: center;
+      justify-content: center;
+      outline: none;
+    }
+
+    .slide-ctrl-btn:active {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* ==========================================================================
+       WIDGET 4: HIGH VISIBILITY CALENDAR & SCHEDULE CARD
+       ========================================================================== */
+    .calendar-schedule-card {
+      height: calc(66% - 12px);
+      padding: 14px 16px;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+    }
+
+    .combo-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.95);
+      margin-bottom: 6px;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+    }
+
+    .combo-section-title svg {
+      margin-right: 6px;
+      color: #3b82f6;
+    }
+
+    /* Calendar Navigation Buttons */
+    .cal-nav-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      border-radius: 6px;
+      padding: 1px 5px;
+      font-size: 10px;
+      cursor: pointer;
+      outline: none;
+      margin: 0 2px;
+      line-height: 1.2;
+    }
+
+    .cal-nav-btn:hover {
+      background: #3b82f6;
+      border-color: #3b82f6;
+    }
+
+    .cal-today-btn {
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #60a5fa;
+      border-radius: 8px;
+      padding: 1px 6px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      margin-left: 4px;
+    }
+
+    .cal-today-btn:hover {
+      background: #3b82f6;
+      color: #ffffff;
+    }
+
+    /* Calendar and News 50/50 Split Layout */
+    .calendar-news-split-row {
+      display: -webkit-flex;
+      display: flex;
+      margin-bottom: 6px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      max-height: 230px;
+    }
+
+    .calendar-col-left {
+      width: 48%;
+      padding-right: 8px;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+    }
+
+    .news-col-right {
+      width: 52%;
+      padding-left: 8px;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+    }
+
+    /* Compact Monthly Calendar Table */
+    .calendar-compact-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin-bottom: 4px;
+    }
+
+    .calendar-compact-table th {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.6);
+      padding: 1px 0;
+      text-align: center;
+    }
+
+    .calendar-compact-table th.sun { color: #f87171; }
+    .calendar-compact-table th.sat { color: #60a5fa; }
+
+    .calendar-compact-table td {
+      text-align: center;
+      padding: 1px 0;
+      position: relative;
+    }
+
+    .calendar-date-cell {
+      display: inline-block;
+      width: 23px;
+      height: 23px;
+      line-height: 23px;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      cursor: pointer;
+      -webkit-transition: all 0.15s ease;
+      transition: all 0.15s ease;
+    }
+
+    .calendar-date-cell:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .calendar-date-cell.selected {
+      background: rgba(59, 130, 246, 0.4);
+      border: 1.5px solid #60a5fa;
+      color: #ffffff;
+      font-weight: 900;
+    }
+
+    .calendar-date-cell.today {
+      background: #3b82f6;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 900;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.9);
+    }
+
+    .calendar-date-cell.has-event:after {
+      content: '';
+      position: absolute;
+      bottom: 0px;
+      left: 50%;
+      margin-left: -2px;
+      width: 4px;
+      height: 4px;
+      background: #10b981;
+      border-radius: 50%;
+    }
+
+    /* Schedule Header Add Button */
+    .btn-add-schedule-main {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      border-radius: 14px;
+      padding: 3px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      outline: none;
+      box-shadow: 0 3px 10px rgba(59, 130, 246, 0.4);
+      display: -webkit-inline-flex;
+      display: inline-flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-transition: all 0.2s ease;
+      transition: all 0.2s ease;
+    }
+
+    .btn-add-schedule-main:hover {
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+      box-shadow: 0 5px 14px rgba(59, 130, 246, 0.6);
+    }
+
+    /* Top 10 News List Styling */
+    .news-scroll-list {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      -webkit-flex: 1;
+      flex: 1;
+      padding-right: 2px;
+    }
+
+    .news-item {
+      padding: 4px 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+      margin-bottom: 4px;
+      border-left: 2.5px solid #3b82f6;
+      -webkit-transition: background 0.2s ease;
+      transition: background 0.2s ease;
+    }
+
+    .news-item:active {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .news-meta {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .news-tag {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: #fff;
+    }
+
+    .tag-tech { background: #8b5cf6; }
+    .tag-society { background: #3b82f6; }
+    .tag-economy { background: #10b981; }
+    .tag-sports { background: #f59e0b; }
+    .tag-entertainment { background: #ec4899; }
+    .tag-global { background: #6366f1; }
+
+    .news-time {
+      font-size: 9px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .news-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-news-refresh {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 10px;
+      padding: 1px 6px;
+      cursor: pointer;
+      outline: none;
+      display: -webkit-inline-flex;
+      display: inline-flex;
+      -webkit-align-items: center;
+      align-items: center;
+    }
+
+    .btn-news-refresh:active {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Schedule List below Calendar */
+    .schedule-sub-list {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      -webkit-flex: 1;
+      flex: 1;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 6px;
+    }
+
+    .schedule-item {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      padding: 5px 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      margin-bottom: 5px;
+      border-left: 3px solid #3b82f6;
+      cursor: pointer;
+      -webkit-transition: all 0.15s ease;
+      transition: all 0.15s ease;
+    }
+
+    .schedule-item:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-left-color: #60a5fa;
+    }
+
+    .item-time {
+      font-size: 11px;
+      font-weight: 700;
+      color: #60a5fa;
+      width: 46px;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .item-text {
+      font-size: 12px;
+      color: #fff;
+      -webkit-flex: 1;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-delete-event {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 1px 5px;
+      border-radius: 4px;
+      outline: none;
+      margin-left: 6px;
+      line-height: 1;
+      -webkit-transition: all 0.15s ease;
+      transition: all 0.15s ease;
+    }
+
+    .btn-delete-event:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* Modal Dialog for Adding Events */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.65);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: center;
+      justify-content: center;
+    }
+
+    .modal-box {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 380px;
+      padding: 18px 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-header {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .modal-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 22px;
+      cursor: pointer;
+      line-height: 1;
+      outline: none;
+    }
+
+    .modal-close-btn:hover {
+      color: #ffffff;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 4px;
+    }
+
+    .form-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #ffffff;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: #3b82f6;
+    }
+
+    .form-input:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-footer {
+      display: -webkit-flex;
+      display: flex;
+      -webkit-justify-content: flex-end;
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+
+    .btn-modal-cancel {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.8);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 8px;
+      outline: none;
+    }
+
+    .btn-modal-save {
+      background: #3b82f6;
+      border: none;
+      color: #ffffff;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      outline: none;
+      box-shadow: 0 3px 10px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-modal-save:hover {
+      background: #2563eb;
+    }
+
+    .checkbox-custom {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      margin-right: 8px;
+      display: -webkit-inline-flex;
+      display: inline-flex;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: center;
+      justify-content: center;
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .schedule-item.completed .checkbox-custom {
+      background: #10b981;
+      border-color: #10b981;
+    }
+
+    /* ==========================================================================
+       FULL AMBIENT PHOTO FRAME MODE
+       ========================================================================== */
+    .ambient-mode-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 100;
+      background: #000;
+      display: none;
+      opacity: 0;
+      -webkit-transition: opacity 0.5s ease;
+      transition: opacity 0.5s ease;
+    }
+
+    .ambient-mode-container.active {
+      display: block;
+      opacity: 1;
+    }
+
+    .ambient-photo-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      -webkit-transition: opacity 1s ease-in-out;
+      transition: opacity 1s ease-in-out;
+    }
+
+    .ambient-clock-overlay {
+      position: absolute;
+      bottom: 40px;
+      left: 40px;
+      z-index: 102;
+      padding: 20px 28px;
+      background: rgba(0, 0, 0, 0.4);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 24px;
+    }
+
+    .ambient-time {
+      font-size: 64px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .ambient-date {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.8);
+      margin-top: 6px;
+    }
+
+    .ambient-exit-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      z-index: 102;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Mesh Gradient Background -->
+  <div class="bg-gradient"></div>
+
+  <!-- Main App Layout Container -->
+  <div class="app-container" id="dashboard-app">
+
+    <!-- Top Header Bar -->
+    <header class="header-bar glass-panel">
+      <div class="header-left">
+        <div class="status-dot"></div>
+        <div class="app-title">Kaigamori Smart Display</div>
+      </div>
+
+      <div class="header-right">
+        <div class="status-icon" id="wifi-status">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12.55a11 11 0 0 1 14 0"></path>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+            <line x1="12" y1="20" x2="12.01" y2="20" stroke-width="3"></line>
+          </svg>
+          Wi-Fi
+        </div>
+
+        <div class="status-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect>
+            <line x1="22" y1="11" x2="22" y2="13"></line>
+            <line x1="6" y1="10" x2="6" y2="14" stroke="#10b981" stroke-width="2"></line>
+            <line x1="9" y1="10" x2="9" y2="14" stroke="#10b981" stroke-width="2"></line>
+            <line x1="12" y1="10" x2="12" y2="14" stroke="#10b981" stroke-width="2"></line>
+          </svg>
+          98%
+        </div>
+
+        <button class="icon-btn" id="btn-toggle-ambient">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          フォトモード
+        </button>
+
+        <button class="icon-btn" id="btn-fullscreen">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+          </svg>
+          全画面
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dashboard Grid -->
+    <main class="main-grid">
+
+      <!-- LEFT COLUMN -->
+      <div class="grid-col grid-left">
+
+        <!-- Widget 1: CLOCK & DUAL WEATHER (巨大時計 ＆ 気温グラフ ＆ 降水確率の直下に天気マーク) -->
+        <section class="glass-panel clock-weather-card card-space-bottom">
+          <div class="clock-weather-header">
+            <div class="clock-left-group">
+              <!-- Digital Clock Display Box -->
+              <div class="clock-container" id="digital-clock-box">
+                <span class="time-main" id="clock-time">00:00</span>
+                <span class="time-seconds" id="clock-sec">:00</span>
+              </div>
+
+              <!-- SVG Analog Clock Display Box (Enlarged 220px with 12 Numbers) -->
+              <div class="analog-clock-box" id="analog-clock-box">
+                <svg class="analog-clock-svg" viewBox="0 0 200 200">
+                  <!-- Clock Dial background -->
+                  <circle cx="100" cy="100" r="95" fill="rgba(15, 23, 42, 0.7)" stroke="rgba(255, 255, 255, 0.2)" stroke-width="3"/>
+                  <circle cx="100" cy="100" r="88" fill="none" stroke="rgba(59, 130, 246, 0.3)" stroke-width="1.5"/>
+
+                  <!-- Hour Ticks for all 12 hours -->
+                  <line x1="100" y1="10" x2="100" y2="20" stroke="#ffffff" stroke-width="3"/>
+                  <line x1="140" y1="20.7" x2="145" y2="12.1" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+                  <line x1="169.3" y1="50" x2="177.9" y2="45" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+                  <line x1="180" y1="100" x2="190" y2="100" stroke="#ffffff" stroke-width="3"/>
+                  <line x1="169.3" y1="150" x2="177.9" y2="155" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+                  <line x1="140" y1="179.3" x2="145" y2="187.9" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+                  <line x1="100" y1="180" x2="100" y2="190" stroke="#ffffff" stroke-width="3"/>
+                  <line x1="60" y1="179.3" x2="55" y2="187.9" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+                  <line x1="30.7" y1="150" x2="22.1" y2="155" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+                  <line x1="20" y1="100" x2="10" y2="100" stroke="#ffffff" stroke-width="3"/>
+                  <line x1="30.7" y1="50" x2="22.1" y2="45" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+                  <line x1="60" y1="20.7" x2="55" y2="12.1" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+
+                  <!-- All 12 Numbers (1 to 12) -->
+                  <text x="100" y="36" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">12</text>
+                  <text x="133.5" y="45" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">1</text>
+                  <text x="158" y="69" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">2</text>
+                  <text x="167" y="104" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">3</text>
+                  <text x="158" y="139" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">4</text>
+                  <text x="133.5" y="163" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">5</text>
+                  <text x="100" y="172" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">6</text>
+                  <text x="66.5" y="163" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">7</text>
+                  <text x="42" y="139" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">8</text>
+                  <text x="33" y="104" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">9</text>
+                  <text x="42" y="69" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">10</text>
+                  <text x="66.5" y="45" text-anchor="middle" fill="#ffffff" font-size="12" font-weight="bold">11</text>
+
+                  <!-- Clock Hands -->
+                  <!-- Hour Hand -->
+                  <line id="analog-hour-hand" x1="100" y1="100" x2="100" y2="52" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round"/>
+                  <!-- Minute Hand -->
+                  <line id="analog-minute-hand" x1="100" y1="100" x2="100" y2="30" stroke="#60a5fa" stroke-width="3.5" stroke-linecap="round"/>
+                  <!-- Second Hand -->
+                  <line id="analog-second-hand" x1="100" y1="100" x2="100" y2="22" stroke="#f59e0b" stroke-width="2" stroke-linecap="round"/>
+
+                  <!-- Center Pin -->
+                  <circle cx="100" cy="100" r="5" fill="#f59e0b" stroke="#ffffff" stroke-width="2"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Top-Right Weather & Analog Mode Date Group -->
+            <div class="weather-right-group">
+              <!-- Top-Right Date Display (Visible when Analog Clock Mode is Active) -->
+              <div class="date-display-top-right" id="clock-date-top-right" style="display: none;">
+                2026年9月29日 (火)
+              </div>
+
+              <div class="weather-current-box">
+                <svg class="weather-icon-svg" viewBox="0 0 64 64">
+                  <circle cx="26" cy="26" r="10" fill="#f59e0b"/>
+                  <path d="M38 32 a12 12 0 0 1 0 24 h-20 a10 10 0 0 1 0 -20 a12 12 0 0 1 20 -4 z" fill="#60a5fa" opacity="0.9"/>
+                </svg>
+                <div>
+                  <div class="weather-temp">22°C</div>
+                  <div class="weather-condition" style="display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;">
+                    <span>晴れのち曇り</span>
+                    <span style="font-size:9px; font-weight:700; color:#60a5fa; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); padding:1px 5px; border-radius:4px; margin-left:4px;">気象庁 仙台</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Date Display & Clock Mode Switch Tabs Row -->
+          <div class="date-display-row">
+            <span id="clock-date-left" style="white-space: nowrap;">2026年9月29日 (火)</span>
+            <div class="tab-pills" style="margin-left: 12px; -webkit-flex-shrink: 0; flex-shrink: 0;">
+              <button class="tab-btn active" id="btn-clock-digital">🔢 デジタル</button>
+              <button class="tab-btn" id="btn-clock-analog">🕒 アナログ</button>
+            </div>
+          </div>
+
+          <!-- Weather Mode Switch Control Header -->
+          <div class="weather-switch-header">
+            <span class="weather-label-title-text" id="weather-section-title">📈 24時間 気温推移 (Yahoo!天気)</span>
+            <div class="tab-pills">
+              <button class="tab-btn active" id="btn-weather-mode-24h">📈 24時間気温</button>
+              <button class="tab-btn" id="btn-weather-mode-weekly">📅 週間予報</button>
+            </div>
+          </div>
+
+          <!-- Section A: 24時間 気温グラフ (1時間刻み・横スクロール対応) -->
+          <div class="weather-dual-section" id="weather-section-24h">
+            <div class="weather-label-title" style="margin-bottom: 4px;">
+              <span style="font-size:11px; color:rgba(255,255,255,0.75);">📍 宮城県仙台市 | 1時間毎推移 (仙台管区気象台)</span>
+              <span style="font-size:10px; color:#60a5fa; font-weight:bold;">👈 左右スクロールで24時間表示 ➔</span>
+            </div>
+
+            <!-- Integrated SVG: Curve + Temp Values Above + Time + Rain % + Weather Icon Below Rain % (24 Points) -->
+            <div class="temp-chart-wrapper">
+              <svg viewBox="0 0 1280 120" class="temp-chart-svg">
+                <defs>
+                  <linearGradient id="tempGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.45"/>
+                    <stop offset="100%" stop-color="#3b82f6" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+                
+                <!-- Curve Shaded Fill -->
+                <path d="M 40 48 L 92 48 L 144 52 L 196 52 L 248 56 L 300 52 L 352 44 L 404 35 L 456 27 L 508 23 L 560 18 L 612 14 L 664 10 L 716 10 L 768 14 L 820 18 L 872 23 L 924 27 L 976 31 L 1028 35 L 1080 40 L 1132 40 L 1184 44 L 1236 44 L 1236 68 L 40 68 Z" fill="url(#tempGradient)"/>
+                <!-- Curve Stroke Line -->
+                <path d="M 40 48 L 92 48 L 144 52 L 196 52 L 248 56 L 300 52 L 352 44 L 404 35 L 456 27 L 508 23 L 560 18 L 612 14 L 664 10 L 716 10 L 768 14 L 820 18 L 872 23 L 924 27 L 976 31 L 1080 40 L 1132 40 L 1184 44 L 1236 44" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/>
+
+                <!-- 00:00 (16°C / 0% / 🌙) -->
+                <circle cx="40" cy="48" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="40" y="40" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">16°</text>
+                <text x="40" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">00:00</text>
+                <text x="40" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">0%</text>
+                <text x="40" y="108" text-anchor="middle" font-size="14">🌙</text>
+
+                <!-- 01:00 (16°C / 0% / 🌙) -->
+                <circle cx="92" cy="48" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="92" y="40" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">16°</text>
+                <text x="92" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">01:00</text>
+                <text x="92" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">0%</text>
+                <text x="92" y="108" text-anchor="middle" font-size="14">🌙</text>
+
+                <!-- 02:00 (15°C / 0% / 🌙) -->
+                <circle cx="144" cy="52" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="144" y="44" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">15°</text>
+                <text x="144" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">02:00</text>
+                <text x="144" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">0%</text>
+                <text x="144" y="108" text-anchor="middle" font-size="14">🌙</text>
+
+                <!-- 03:00 (15°C / 0% / 🌙) -->
+                <circle cx="196" cy="52" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="196" y="44" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">15°</text>
+                <text x="196" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">03:00</text>
+                <text x="196" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">0%</text>
+                <text x="196" y="108" text-anchor="middle" font-size="14">🌙</text>
+
+                <!-- 04:00 (14°C Min / 0% / 🌙) -->
+                <circle cx="248" cy="56" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="248" y="48" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">14°</text>
+                <text x="248" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">04:00</text>
+                <text x="248" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">0%</text>
+                <text x="248" y="108" text-anchor="middle" font-size="14">🌙</text>
+
+                <!-- 05:00 (15°C / 0% / 🌅) -->
+                <circle cx="300" cy="52" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="300" y="44" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">15°</text>
+                <text x="300" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">05:00</text>
+                <text x="300" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">0%</text>
+                <text x="300" y="108" text-anchor="middle" font-size="14">🌅</text>
+
+                <!-- 06:00 (17°C / 0% / ☀️) -->
+                <circle cx="352" cy="44" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="352" y="36" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">17°</text>
+                <text x="352" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">06:00</text>
+                <text x="352" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">0%</text>
+                <text x="352" y="108" text-anchor="middle" font-size="14">☀️</text>
+
+                <!-- 07:00 (19°C / 0% / ☀️) -->
+                <circle cx="404" cy="35" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="404" y="27" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">19°</text>
+                <text x="404" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">07:00</text>
+                <text x="404" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">0%</text>
+                <text x="404" y="108" text-anchor="middle" font-size="14">☀️</text>
+
+                <!-- 08:00 (21°C / 10% / ☀️) -->
+                <circle cx="456" cy="27" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="456" y="19" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">21°</text>
+                <text x="456" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">08:00</text>
+                <text x="456" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">10%</text>
+                <text x="456" y="108" text-anchor="middle" font-size="14">☀️</text>
+
+                <!-- 09:00 (22°C / 10% / 🌤️) -->
+                <circle cx="508" cy="23" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="508" y="15" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">22°</text>
+                <text x="508" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">09:00</text>
+                <text x="508" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">10%</text>
+                <text x="508" y="108" text-anchor="middle" font-size="14">🌤️</text>
+
+                <!-- 10:00 (23°C / 10% / 🌤️) -->
+                <circle cx="560" cy="18" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="560" y="10" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">23°</text>
+                <text x="560" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">10:00</text>
+                <text x="560" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">10%</text>
+                <text x="560" y="108" text-anchor="middle" font-size="14">🌤️</text>
+
+                <!-- 11:00 (24°C / 20% / 🌤️) -->
+                <circle cx="612" cy="14" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="612" y="7" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">24°</text>
+                <text x="612" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">11:00</text>
+                <text x="612" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">20%</text>
+                <text x="612" y="108" text-anchor="middle" font-size="14">🌤️</text>
+
+                <!-- 12:00 (25°C Peak / 20% / ☀️) -->
+                <circle cx="664" cy="10" r="4.5" fill="#f59e0b" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="664" y="21" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="900">25°</text>
+                <text x="664" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">12:00</text>
+                <text x="664" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">20%</text>
+                <text x="664" y="108" text-anchor="middle" font-size="14">☀️</text>
+
+                <!-- 13:00 (25°C Peak / 30% / 🌤️) -->
+                <circle cx="716" cy="10" r="4.5" fill="#f59e0b" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="716" y="21" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="900">25°</text>
+                <text x="716" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">13:00</text>
+                <text x="716" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">30%</text>
+                <text x="716" y="108" text-anchor="middle" font-size="14">🌤️</text>
+
+                <!-- 14:00 (24°C / 30% / 🌦️) -->
+                <circle cx="768" cy="14" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="768" y="7" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">24°</text>
+                <text x="768" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">14:00</text>
+                <text x="768" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">30%</text>
+                <text x="768" y="108" text-anchor="middle" font-size="14">🌦️</text>
+
+                <!-- 15:00 (23°C / 40% / 🌦️) -->
+                <circle cx="820" cy="18" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="820" y="10" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">23°</text>
+                <text x="820" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">15:00</text>
+                <text x="820" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">40%</text>
+                <text x="820" y="108" text-anchor="middle" font-size="14">🌦️</text>
+
+                <!-- 16:00 (22°C / 50% / 🌧️) -->
+                <circle cx="872" cy="23" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="872" y="15" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">22°</text>
+                <text x="872" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">16:00</text>
+                <text x="872" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">50%</text>
+                <text x="872" y="108" text-anchor="middle" font-size="14">🌧️</text>
+
+                <!-- 17:00 (21°C / 60% / 🌧️) -->
+                <circle cx="924" cy="27" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="924" y="19" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">21°</text>
+                <text x="924" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">17:00</text>
+                <text x="924" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">60%</text>
+                <text x="924" y="108" text-anchor="middle" font-size="14">🌧️</text>
+
+                <!-- 18:00 (20°C / 50% / 🌧️) -->
+                <circle cx="976" cy="31" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="976" y="23" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">20°</text>
+                <text x="976" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">18:00</text>
+                <text x="976" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">50%</text>
+                <text x="976" y="108" text-anchor="middle" font-size="14">🌧️</text>
+
+                <!-- 19:00 (19°C / 30% / ☁️) -->
+                <circle cx="1028" cy="35" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="1028" y="27" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">19°</text>
+                <text x="1028" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">19:00</text>
+                <text x="1028" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">30%</text>
+                <text x="1028" y="108" text-anchor="middle" font-size="14">☁️</text>
+
+                <!-- 20:00 (18°C / 20% / ☁️) -->
+                <circle cx="1080" cy="40" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="1080" y="32" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">18°</text>
+                <text x="1080" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">20:00</text>
+                <text x="1080" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">20%</text>
+                <text x="1080" y="108" text-anchor="middle" font-size="14">☁️</text>
+
+                <!-- 21:00 (18°C / 10% / ☁️) -->
+                <circle cx="1132" cy="40" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="1132" y="32" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">18°</text>
+                <text x="1132" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">21:00</text>
+                <text x="1132" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">10%</text>
+                <text x="1132" y="108" text-anchor="middle" font-size="14">☁️</text>
+
+                <!-- 22:00 (17°C / 0% / 🌙) -->
+                <circle cx="1184" cy="44" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="1184" y="36" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">17°</text>
+                <text x="1184" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">22:00</text>
+                <text x="1184" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">0%</text>
+                <text x="1184" y="108" text-anchor="middle" font-size="14">🌙</text>
+
+                <!-- 23:00 (17°C / 0% / 🌙) -->
+                <circle cx="1236" cy="44" r="3.5" fill="#3b82f6" stroke="#ffffff" stroke-width="1.5"/>
+                <text x="1236" y="36" text-anchor="middle" fill="#ffffff" font-size="10" font-weight="bold">17°</text>
+                <text x="1236" y="74" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="9.5">23:00</text>
+                <text x="1236" y="89" text-anchor="middle" fill="#60a5fa" font-size="9" font-weight="bold">0%</text>
+                <text x="1236" y="108" text-anchor="middle" font-size="14">🌙</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Section B: 週間予報 (気象庁: 仙台) -->
+          <div class="weather-dual-section" id="weather-section-weekly" style="display: none;">
+            <div class="weather-label-title">
+              <span>📅 週間予報 (気象庁: 仙台)</span>
+              <span id="jma-weekly-subtitle" style="font-size:11px; font-weight:normal; color:rgba(255,255,255,0.75);">仙台管区気象台 発表</span>
+            </div>
+            <div class="weekly-forecast-row" id="weekly-forecast-container">
+              <div class="weekly-pill">
+                <div class="weekly-day">今日(火)</div>
+                <div class="weekly-rain">0%</div>
+                <div class="weekly-icon">☀️</div>
+                <div class="weekly-temp-range"><span class="high-t">25°</span>/<span class="low-t">17°</span></div>
+              </div>
+              <div class="weekly-pill">
+                <div class="weekly-day">明日(水)</div>
+                <div class="weekly-rain">10%</div>
+                <div class="weekly-icon">🌤️</div>
+                <div class="weekly-temp-range"><span class="high-t">23°</span>/<span class="low-t">16°</span></div>
+              </div>
+              <div class="weekly-pill">
+                <div class="weekly-day">木曜日</div>
+                <div class="weekly-rain">80%</div>
+                <div class="weekly-icon">🌧️</div>
+                <div class="weekly-temp-range"><span class="high-t">20°</span>/<span class="low-t">15°</span></div>
+              </div>
+              <div class="weekly-pill">
+                <div class="weekly-day">金曜日</div>
+                <div class="weekly-rain">20%</div>
+                <div class="weekly-icon">☁️</div>
+                <div class="weekly-temp-range"><span class="high-t">22°</span>/<span class="low-t">16°</span></div>
+              </div>
+              <div class="weekly-pill">
+                <div class="weekly-day">土曜日</div>
+                <div class="weekly-rain">0%</div>
+                <div class="weekly-icon">☀️</div>
+                <div class="weekly-temp-range"><span class="high-t">26°</span>/<span class="low-t">18°</span></div>
+              </div>
+              <div class="weekly-pill">
+                <div class="weekly-day">日曜日</div>
+                <div class="weekly-rain">50%</div>
+                <div class="weekly-icon">🌦️</div>
+                <div class="weekly-temp-range"><span class="high-t">21°</span>/<span class="low-t">15°</span></div>
+              </div>
+              <div class="weekly-pill">
+                <div class="weekly-day">月曜日</div>
+                <div class="weekly-rain">10%</div>
+                <div class="weekly-icon">☀️</div>
+                <div class="weekly-temp-range"><span class="high-t">23°</span>/<span class="low-t">14°</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Widget 2: COMPACT MUSIC / SPOTIFY & NHK RADIO MEDIA PLAYER -->
+        <section class="glass-panel media-card-compact radio-mode" id="media-card-panel" style="min-height: 120px; height: auto;">
+          <audio id="radio-audio-element" style="display:none;"></audio>
+
+          <!-- 1. Radio Player Container -->
+          <div id="radio-player-container" style="display: block;">
+            <div class="media-top-row">
+              <div class="media-left-group">
+                <!-- Compact Cover Image -->
+                <div class="album-art-small" id="album-cover">
+                  <div class="album-art-fallback radio-art-fallback" id="album-fallback-bg">
+                    <svg id="svg-media-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2">
+                      <path d="M9 18V5l12-2v13"></path>
+                      <circle cx="6" cy="18" r="3"></circle>
+                      <circle cx="18" cy="16" r="3"></circle>
+                    </svg>
+                  </div>
+                </div>
+
+                <div style="overflow:hidden;">
+                  <div class="media-title-compact" id="song-title">NHK ラジオ第1 (仙台)</div>
+                  <div class="media-artist-compact" id="song-artist">ニュース / ローカル情報 LIVE (仙台)</div>
+                  
+                  <!-- Radio Pills -->
+                  <div class="radio-selector-row" id="radio-station-row" style="display: flex;">
+                    <div class="radio-pill active" id="radio-r1">R1</div>
+                    <div class="radio-pill" id="radio-fm">FM</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mode Selector Tabs & Inline Controls -->
+              <div class="inline-controls">
+                <div class="tab-pills" style="margin-right: 6px;">
+                  <button class="tab-btn active" id="tab-media-radio">📻 ラジオ</button>
+                  <button class="tab-btn" id="tab-media-spotify">🎧 Spotify</button>
+                </div>
+
+                <!-- Prev -->
+                <button class="media-ctrl-btn-small" id="btn-prev-song">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                    <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"></line>
+                  </svg>
+                </button>
+
+                <!-- Play/Pause -->
+                <button class="media-ctrl-btn-small play-pause-btn-small radio-mode-btn" id="btn-play-pause">
+                  <svg id="icon-pause" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="4" width="4" height="16"></rect>
+                    <rect x="14" y="4" width="4" height="16"></rect>
+                  </svg>
+                  <svg id="icon-play" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="display:none; margin-left: 1px;">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                </button>
+
+                <!-- Next -->
+                <button class="media-ctrl-btn-small" id="btn-next-song">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                    <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Volume Control Row (1/3 Length, Right Aligned) -->
+            <div class="volume-control-row" style="display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: flex-end; justify-content: flex-end; margin-top: 6px; padding: 0 2px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="2" style="margin-right: 6px; -webkit-flex-shrink: 0; flex-shrink: 0;">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+              <input type="range" id="input-radio-volume" class="volume-slider" min="0" max="100" value="80" style="width: 33%; max-width: 90px; height: 4px; border-radius: 2px; -webkit-appearance: none; appearance: none; background: rgba(255, 255, 255, 0.2); outline: none; cursor: pointer;">
+              <span id="volume-val-label" style="font-size: 10px; color: rgba(255,255,255,0.75); font-weight: 700; width: 30px; text-align: right; margin-left: 6px; -webkit-flex-shrink: 0; flex-shrink: 0;">80%</span>
+            </div>
+          </div>
+
+          <!-- 2. Spotify Embed Container -->
+          <div id="spotify-player-container" style="display: none;">
+            <div style="display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: space-between; justify-content: space-between; margin-bottom: 6px;">
+              <div style="display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; overflow-x: auto;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#1db954" style="margin-right: 6px; -webkit-flex-shrink: 0; flex-shrink: 0;">
+                  <path d="M12 0C5.376 0 0 5.376 0 12s5.376 12 12 12 12-5.376 12-12S18.624 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.12-.779-.18-.899-.54-.12-.42.18-.78.54-.9 4.56-1.02 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141 C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.18-1.2-.18-1.38-.72-.18-.6.18-1.2.72-1.38 4.26-1.26 11.28-1.02 15.72 1.62.54.3.72 1.02.42 1.56-.3.42-1.02.6-1.56.3z"/>
+                </svg>
+                <div class="radio-pill active" id="spotify-pill-0" style="white-space: nowrap; background: #1db954; border-color: #1db954; color: #ffffff;">🌟 K-Trot Stars</div>
+                <div class="radio-pill" id="spotify-pill-1" style="white-space: nowrap;">🔥 J-Hits</div>
+                <div class="radio-pill" id="spotify-pill-2" style="white-space: nowrap;">☕ Chill Lofi</div>
+                <div class="radio-pill" id="spotify-pill-3" style="white-space: nowrap;">🎹 Piano</div>
+              </div>
+
+              <div class="tab-pills" style="margin-left: 6px; -webkit-flex-shrink: 0; flex-shrink: 0;">
+                <button class="tab-btn" id="tab-media-radio-spotifyview">📻 ラジオ</button>
+                <button class="tab-btn active" id="tab-media-spotify-spotifyview">🎧 Spotify</button>
+              </div>
+            </div>
+            <iframe id="spotify-embed-iframe" src="https://open.spotify.com/embed/artist/06HL4z0CvFAxyc27GXpf02?utm_source=generator&theme=0" width="100%" height="80" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius: 10px; border: 0; display: block;"></iframe>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="grid-col grid-right">
+
+        <!-- Widget 3: Photo Slideshow Frame -->
+        <section class="glass-panel photo-card card-space-bottom" id="photo-slideshow-widget">
+          <!-- Background Photo Slides -->
+          <div class="photo-bg-slide active" id="slide-0" style="background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80');"></div>
+          <div class="photo-bg-slide" id="slide-1" style="background-image: url('https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=1200&q=80');"></div>
+          <div class="photo-bg-slide" id="slide-2" style="background-image: url('https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80');"></div>
+
+          <div class="photo-overlay"></div>
+
+          <div class="photo-header">
+            <div class="photo-tag">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;">
+                <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span id="photo-location-tag">富士山 & 本栖湖</span>
+            </div>
+
+            <!-- Album Selector Buttons -->
+            <div style="display: -webkit-inline-flex; display: inline-flex; -webkit-align-items: center; align-items: center;">
+              <button class="album-pill active" id="btn-album-1">アルバム1</button>
+              <button class="album-pill" id="btn-album-2">アルバム2</button>
+              <button class="album-pill" id="btn-album-3">アルバム3</button>
+            </div>
+
+            <button class="icon-btn" id="btn-expand-photo" style="padding: 3px 7px; font-size:11px; margin-left: 4px;">
+              全画面フォト
+            </button>
+          </div>
+
+          <div class="photo-footer">
+            <div>
+              <div class="photo-info-title" id="photo-title">Lake Motosu Sunset</div>
+              <div class="photo-info-subtitle" id="photo-subtitle">山梨県 - Photo by Unsplash</div>
+            </div>
+
+            <div class="slideshow-controls">
+              <button class="slide-ctrl-btn" id="btn-prev-photo">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+              </button>
+              <button class="slide-ctrl-btn" id="btn-toggle-slideshow">
+                <svg id="icon-slide-pause" width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+                <svg id="icon-slide-play" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="display:none;">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </button>
+              <button class="slide-ctrl-btn" id="btn-next-photo">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Widget 4: CALENDAR, TOP 10 NEWS & SCHEDULE CARD -->
+        <section class="glass-panel calendar-schedule-card">
+          
+          <!-- 50/50 Split Row: Monthly Calendar (Left) + Top 10 News (Right) -->
+          <div class="calendar-news-split-row">
+            
+            <!-- Left Column (~50%): Monthly Calendar Grid -->
+            <div class="calendar-col-left">
+              <div class="combo-section-title">
+                <span style="display: -webkit-inline-flex; display: inline-flex; -webkit-align-items: center; align-items: center;">
+                  <button class="cal-nav-btn" id="btn-cal-prev" title="前月">◀</button>
+                  <span id="calendar-month-year" style="margin: 0 4px; font-weight: 700;">2026年 9月</span>
+                  <button class="cal-nav-btn" id="btn-cal-next" title="翌月">▶</button>
+                  <button class="cal-today-btn" id="btn-cal-today" style="display: none;" title="今月に戻る">今月</button>
+                </span>
+                <span style="font-size:9px; color:rgba(255,255,255,0.5);">● 予定</span>
+              </div>
+
+              <table class="calendar-compact-table">
+                <thead>
+                  <tr>
+                    <th class="sun">日</th>
+                    <th>月</th>
+                    <th>火</th>
+                    <th>水</th>
+                    <th>木</th>
+                    <th>金</th>
+                    <th class="sat">土</th>
+                  </tr>
+                </thead>
+                <tbody id="calendar-body-rows">
+                  <!-- Dynamically rendered calendar dates -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Right Column (~50%): Today's Top 10 News -->
+            <div class="news-col-right">
+              <div class="combo-section-title">
+                <span>📰 Google ニュース TOP 10</span>
+                <button class="btn-news-refresh" id="btn-refresh-news">
+                  <span id="news-last-updated" style="margin-right:2px;">1時間毎更新</span>
+                  🔄
+                </button>
+              </div>
+
+              <div class="news-scroll-list" id="news-container">
+                <!-- Dynamically populated Top 10 News items -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Section 2: Selected Date Schedule List Below Split Row -->
+          <div class="combo-section-title" style="margin-top: 2px;">
+            <span id="schedule-section-title">📅 本日の予定</span>
+            <button class="btn-add-schedule-main" id="btn-add-schedule">➕ 予定を追加</button>
+          </div>
+
+          <div class="schedule-sub-list" id="schedule-items-container">
+            <!-- Dynamically populated schedule items -->
+          </div>
+
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- FULL AMBIENT PHOTO FRAME MODE SCREEN -->
+  <div class="ambient-mode-container" id="ambient-screen">
+    <div class="ambient-photo-bg" id="ambient-photo-bg" style="background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80');"></div>
+    
+    <div class="ambient-clock-overlay">
+      <div class="ambient-time" id="ambient-time-text">23:17</div>
+      <div class="ambient-date" id="ambient-date-text">2026年9月29日 火曜日 | 22°C 晴れ</div>
+    </div>
+
+    <button class="icon-btn ambient-exit-btn" id="btn-close-ambient">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+      ダッシュボードに戻る
+    </button>
+  </div>
+
+  <!-- ADD EVENT MODAL DIALOG (Placed at root level for global popup access) -->
+  <div class="modal-backdrop" id="modal-add-event" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-event-date-title">📅 予定の追加</span>
+        <button class="modal-close-btn" id="btn-close-event-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <div style="display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: space-between; justify-content: space-between; margin-bottom: 4px;">
+            <label class="form-label" style="margin-bottom: 0;">予定の時刻</label>
+            <label style="font-size: 11px; font-weight: 700; color: #60a5fa; cursor: pointer; display: -webkit-inline-flex; display: inline-flex; -webkit-align-items: center; align-items: center;">
+              <input type="checkbox" id="chk-event-allday" style="margin-right: 4px; cursor: pointer;"> 終日
+            </label>
+          </div>
+          <input type="time" id="input-event-time" class="form-input" value="10:00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">予定の内容</label>
+          <input type="text" id="input-event-text" class="form-input" placeholder="例: 歯医者の定期検診, 会議など">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-cancel" id="btn-cancel-event-modal">キャンセル</button>
+        <button class="btn-modal-save" id="btn-save-event">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       JAVASCRIPT (ES2018 / iOS 12 Compatible - NO ?. OR ?? OPERATORS)
+       ========================================================================== -->
+  <script>
+    (function() {
+      'use strict';
+
+      /* ------------------------------------------------------------------------
+         1. CLOCK & DATE UPDATE + ANALOG / DIGITAL TOGGLE (ES2018 Compliant)
+         ------------------------------------------------------------------------ */
+      var dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+
+      function padZero(num) {
+        return num < 10 ? '0' + num : '' + num;
+      }
+
+      var currentClockMode = 'digital'; // 'digital' or 'analog'
+
+      function updateClock() {
+        var now = new Date();
+        var rawHours = now.getHours();
+        var rawMinutes = now.getMinutes();
+        var rawSeconds = now.getSeconds();
+
+        var hours = padZero(rawHours);
+        var minutes = padZero(rawMinutes);
+        var seconds = padZero(rawSeconds);
+
+        var timeStr = hours + ':' + minutes;
+        var secStr = ':' + seconds;
+
+        var year = now.getFullYear();
+        var month = now.getMonth() + 1;
+        var date = now.getDate();
+        var day = dayNames[now.getDay()];
+
+        var dateStr = year + '年' + month + '月' + date + '日 (' + day + ')';
+
+        // Update Digital Clock Elements
+        var clockTimeElem = document.getElementById('clock-time');
+        var clockSecElem = document.getElementById('clock-sec');
+        var clockDateLeft = document.getElementById('clock-date-left');
+        var clockDateTopRight = document.getElementById('clock-date-top-right');
+        var ambientTimeElem = document.getElementById('ambient-time-text');
+        var ambientDateElem = document.getElementById('ambient-date-text');
+
+        if (clockTimeElem) { clockTimeElem.textContent = timeStr; }
+        if (clockSecElem) { clockSecElem.textContent = secStr; }
+        if (clockDateLeft) { clockDateLeft.textContent = dateStr; }
+        if (clockDateTopRight) { clockDateTopRight.textContent = dateStr; }
+
+        if (ambientTimeElem) { ambientTimeElem.textContent = timeStr; }
+        if (ambientDateElem) { ambientDateElem.textContent = dateStr + ' | 22°C 晴れ'; }
+
+        // Update Analog Clock SVG Hands
+        var hourHand = document.getElementById('analog-hour-hand');
+        var minHand = document.getElementById('analog-minute-hand');
+        var secHand = document.getElementById('analog-second-hand');
+
+        var hourDeg = (rawHours % 12) * 30 + (rawMinutes / 60) * 30;
+        var minDeg = rawMinutes * 6 + (rawSeconds / 60) * 6;
+        var secDeg = rawSeconds * 6;
+
+        if (hourHand) { hourHand.setAttribute('transform', 'rotate(' + hourDeg + ' 100 100)'); }
+        if (minHand) { minHand.setAttribute('transform', 'rotate(' + minDeg + ' 100 100)'); }
+        if (secHand) { secHand.setAttribute('transform', 'rotate(' + secDeg + ' 100 100)'); }
+      }
+
+      function setClockMode(mode) {
+        currentClockMode = mode;
+        var digitalBox = document.getElementById('digital-clock-box');
+        var analogBox = document.getElementById('analog-clock-box');
+        var btnDigital = document.getElementById('btn-clock-digital');
+        var btnAnalog = document.getElementById('btn-clock-analog');
+        var dateLeft = document.getElementById('clock-date-left');
+        var dateTopRight = document.getElementById('clock-date-top-right');
+
+        if (mode === 'digital') {
+          if (digitalBox) { digitalBox.style.display = '-webkit-flex'; digitalBox.style.display = 'flex'; }
+          if (analogBox) { analogBox.style.display = 'none'; }
+          if (btnDigital) { btnDigital.classList.add('active'); }
+          if (btnAnalog) { btnAnalog.classList.remove('active'); }
+          if (dateLeft) { dateLeft.style.display = 'inline-block'; }
+          if (dateTopRight) { dateTopRight.style.display = 'none'; }
+        } else {
+          if (digitalBox) { digitalBox.style.display = 'none'; }
+          if (analogBox) { analogBox.style.display = '-webkit-flex'; analogBox.style.display = 'flex'; }
+          if (btnAnalog) { btnAnalog.classList.add('active'); }
+          if (btnDigital) { btnDigital.classList.remove('active'); }
+          if (dateLeft) { dateLeft.style.display = 'none'; }
+          if (dateTopRight) { dateTopRight.style.display = 'block'; }
+        }
+      }
+
+      var btnClockDigital = document.getElementById('btn-clock-digital');
+      var btnClockAnalog = document.getElementById('btn-clock-analog');
+
+      if (btnClockDigital) {
+        btnClockDigital.addEventListener('click', function() { setClockMode('digital'); });
+      }
+      if (btnClockAnalog) {
+        btnClockAnalog.addEventListener('click', function() { setClockMode('analog'); });
+      }
+
+      function setWeatherMode(mode) {
+        var sec24h = document.getElementById('weather-section-24h');
+        var secWeekly = document.getElementById('weather-section-weekly');
+        var btn24h = document.getElementById('btn-weather-mode-24h');
+        var btnWeekly = document.getElementById('btn-weather-mode-weekly');
+        var titleElem = document.getElementById('weather-section-title');
+
+        if (mode === '24h') {
+          if (sec24h) { sec24h.style.display = 'block'; }
+          if (secWeekly) { secWeekly.style.display = 'none'; }
+          if (btn24h) { btn24h.classList.add('active'); }
+          if (btnWeekly) { btnWeekly.classList.remove('active'); }
+          if (titleElem) { titleElem.textContent = '📈 24時間 気温推移 (仙台)'; }
+        } else {
+          if (sec24h) { sec24h.style.display = 'none'; }
+          if (secWeekly) { secWeekly.style.display = 'block'; }
+          if (btnWeekly) { btnWeekly.classList.add('active'); }
+          if (btn24h) { btn24h.classList.remove('active'); }
+          if (titleElem) { titleElem.textContent = '📅 週間予報 (気象庁: 仙台)'; }
+        }
+      }
+
+      var btnWeather24h = document.getElementById('btn-weather-mode-24h');
+      var btnWeatherWeekly = document.getElementById('btn-weather-mode-weekly');
+
+      if (btnWeather24h) {
+        btnWeather24h.addEventListener('click', function() { setWeatherMode('24h'); });
+      }
+      if (btnWeatherWeekly) {
+        btnWeatherWeekly.addEventListener('click', function() { setWeatherMode('weekly'); });
+      }
+
+      /* ------------------------------------------------------------------------
+         JMA (気象庁) SENDAL WEEKLY FORECAST API INTEGRATION
+         ------------------------------------------------------------------------ */
+      function getJMAWeatherInfo(code) {
+        code = String(code || '');
+        if (code === '100') { return { icon: '☀️', text: '晴れ' }; }
+        if (code.indexOf('1') === 0) { return { icon: '🌤️', text: '晴れ時々くもり' }; }
+        if (code === '200') { return { icon: '☁️', text: 'くもり' }; }
+        if (code === '201') { return { icon: '🌤️', text: 'くもり時々晴れ' }; }
+        if (code === '202' || code.indexOf('2') === 0) { return { icon: '🌧️', text: 'くもり一時雨' }; }
+        if (code.indexOf('3') === 0) { return { icon: '🌧️', text: '雨' }; }
+        if (code.indexOf('4') === 0) { return { icon: '❄️', text: '雪' }; }
+        return { icon: '🌤️', text: '晴れ' };
+      }
+
+      function renderJMAWeeklyForecast(jmaData) {
+        var container = document.getElementById('weekly-forecast-container');
+        if (!container || !jmaData || !jmaData[1]) { return; }
+
+        try {
+          var weeklySeries = jmaData[1];
+          if (!weeklySeries || !weeklySeries.timeSeries) { return; }
+
+          var timeDefines = weeklySeries.timeSeries[0].timeDefines || [];
+          var areaWeather = weeklySeries.timeSeries[0].areas[0] || {};
+          var weatherCodes = areaWeather.weatherCodes || [];
+          var pops = areaWeather.pops || [];
+
+          var tempArea = null;
+          var tempSeriesAreas = (weeklySeries.timeSeries[1] && weeklySeries.timeSeries[1].areas) ? weeklySeries.timeSeries[1].areas : [];
+          for (var a = 0; a < tempSeriesAreas.length; a++) {
+            if (tempSeriesAreas[a].area && tempSeriesAreas[a].area.name === '仙台') {
+              tempArea = tempSeriesAreas[a];
+              break;
+            }
+          }
+          if (!tempArea && tempSeriesAreas.length > 0) {
+            tempArea = tempSeriesAreas[0];
+          }
+
+          var tempsMin = tempArea ? (tempArea.tempsMin || []) : [];
+          var tempsMax = tempArea ? (tempArea.tempsMax || []) : [];
+
+          container.innerHTML = '';
+
+          var daysCount = Math.min(timeDefines.length, 7);
+          for (var i = 0; i < daysCount; i++) {
+            var d = new Date(timeDefines[i]);
+            var dayName = dayNames[d.getDay()];
+            var dayLabel = '';
+            if (i === 0) {
+              dayLabel = '今日(' + dayName + ')';
+            } else if (i === 1) {
+              dayLabel = '明日(' + dayName + ')';
+            } else {
+              dayLabel = (d.getMonth() + 1) + '/' + d.getDate() + '(' + dayName + ')';
+            }
+
+            var wInfo = getJMAWeatherInfo(weatherCodes[i]);
+            var popVal = pops[i] ? pops[i] + '%' : '--';
+            var maxT = tempsMax[i] ? tempsMax[i] + '°' : '--';
+            var minT = tempsMin[i] ? tempsMin[i] + '°' : '--';
+
+            var pill = document.createElement('div');
+            pill.className = 'weekly-pill';
+
+            var dayDiv = document.createElement('div');
+            dayDiv.className = 'weekly-day';
+            dayDiv.textContent = dayLabel;
+
+            var rainDiv = document.createElement('div');
+            rainDiv.className = 'weekly-rain';
+            rainDiv.textContent = popVal;
+
+            var iconDiv = document.createElement('div');
+            iconDiv.className = 'weekly-icon';
+            iconDiv.textContent = wInfo.icon;
+
+            var tempRangeDiv = document.createElement('div');
+            tempRangeDiv.className = 'weekly-temp-range';
+            tempRangeDiv.innerHTML = '<span class="high-t">' + maxT + '</span>/<span class="low-t">' + minT + '</span>';
+
+            pill.appendChild(dayDiv);
+            pill.appendChild(rainDiv);
+            pill.appendChild(iconDiv);
+            pill.appendChild(tempRangeDiv);
+
+            container.appendChild(pill);
+          }
+
+          var subtitle = document.getElementById('jma-weekly-subtitle');
+          if (subtitle && jmaData[1].publishingOffice) {
+            subtitle.textContent = jmaData[1].publishingOffice + ' 発表 (仙台)';
+          }
+        } catch(err) {
+          console.log('Error rendering JMA weekly forecast:', err);
+        }
+      }
+
+      function fetchJMAWeeklyForecast() {
+        var url = 'https://www.jma.go.jp/bosai/forecast/data/forecast/040000.json';
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+              var data = JSON.parse(xhr.responseText);
+              renderJMAWeeklyForecast(data);
+            } catch (e) {}
+          }
+        };
+        xhr.send();
+      }
+
+      setInterval(updateClock, 1000);
+      updateClock();
+      setClockMode('digital');
+      fetchJMAWeeklyForecast();
+
+      /* ------------------------------------------------------------------------
+         2. COMPACT MUSIC & NHK RADIO MEDIA PLAYER MANAGER (ES2018 Compliant)
+         ------------------------------------------------------------------------ */
+      var currentMediaSource = 'radio'; // Default to NHK Radio 1
+
+      var songs = [
+        { title: 'Midnight Ambient Lofi', artist: 'Chill Soundscape Ensemble', duration: '3:50', totalSec: 230 },
+        { title: 'Rainy Cafe Piano', artist: 'Tokyo Night Acoustic', duration: '2:45', totalSec: 165 },
+        { title: 'Starlight Dreamer', artist: 'Synthwave Relax', duration: '4:12', totalSec: 252 }
+      ];
+
+      var radioStations = [
+        {
+          id: 'r1',
+          name: 'NHK ラジオ第1 (仙台)',
+          program: 'ニュース / ローカル情報 LIVE (仙台)',
+          streamUrl: 'https://simul2.drdi.st.nhk/live/8/joined/master.m3u8'
+        },
+        {
+          id: 'fm',
+          name: 'NHK-FM (仙台)',
+          program: '音楽＆ローカル放送 LIVE (仙台)',
+          streamUrl: 'https://simul2.drdi.st.nhk/live/9/joined/master.m3u8'
+        }
+      ];
+
+      var currentSongIndex = 0;
+      var currentRadioIndex = 0; // 0 = NHK ラジオ第1 (仙台)
+      var isAudioPlaying = false;
+      var currentSec = 0;
+      var songTimer = null;
+
+      var tabMediaMusic = document.getElementById('tab-media-music');
+      var tabMediaRadio = document.getElementById('tab-media-radio');
+      var radioStationRow = document.getElementById('radio-station-row');
+      var albumFallbackBg = document.getElementById('album-fallback-bg');
+      var playPauseBtn = document.getElementById('btn-play-pause');
+      var radioAudioElem = document.getElementById('radio-audio-element');
+
+      function updatePlayPauseUI(playing) {
+        var iconPlay = document.getElementById('icon-play');
+        var iconPause = document.getElementById('icon-pause');
+        if (iconPlay && iconPause) {
+          if (playing) {
+            iconPause.style.display = 'block';
+            iconPlay.style.display = 'none';
+          } else {
+            iconPause.style.display = 'none';
+            iconPlay.style.display = 'block';
+          }
+        }
+      }
+
+      function playRadioStream(stationIdx) {
+        var station = radioStations[stationIdx];
+        if (!station) { return; }
+        if (radioAudioElem) {
+          updateRadioVolume();
+          var currentStationId = radioAudioElem.getAttribute('data-station-id');
+          if (currentStationId !== station.id || radioAudioElem.paused) {
+            try {
+              radioAudioElem.pause();
+            } catch(e) {}
+            radioAudioElem.src = station.streamUrl;
+            radioAudioElem.setAttribute('data-station-id', station.id);
+            try {
+              radioAudioElem.load();
+            } catch(e) {}
+          }
+          var playPromise = radioAudioElem.play();
+          if (playPromise && playPromise.catch) {
+            playPromise.catch(function(err) {
+              console.log('Radio playback error:', err);
+              isAudioPlaying = false;
+              updatePlayPauseUI(false);
+            });
+          }
+        }
+        isAudioPlaying = true;
+        updatePlayPauseUI(true);
+      }
+
+      function stopRadioStream() {
+        if (radioAudioElem) {
+          try {
+            radioAudioElem.pause();
+            radioAudioElem.removeAttribute('src');
+            radioAudioElem.removeAttribute('data-station-id');
+            radioAudioElem.load();
+          } catch(e) {}
+        }
+        isAudioPlaying = false;
+        updatePlayPauseUI(false);
+      }
+
+      var currentMediaSource = 'radio';
+
+      var tabMediaRadio = document.getElementById('tab-media-radio');
+      var tabMediaSpotify = document.getElementById('tab-media-spotify');
+      var tabMediaRadioSv = document.getElementById('tab-media-radio-spotifyview');
+      var tabMediaSpotifySv = document.getElementById('tab-media-spotify-spotifyview');
+
+      var radioPlayerContainer = document.getElementById('radio-player-container');
+      var spotifyPlayerContainer = document.getElementById('spotify-player-container');
+      var spotifyEmbedIframe = document.getElementById('spotify-embed-iframe');
+
+      var spotifyPlaylists = [
+        { id: 'ktrotstars', name: '🌟 K-Trot Stars', url: 'https://open.spotify.com/embed/artist/06HL4z0CvFAxyc27GXpf02?utm_source=generator&theme=0' },
+        { id: 'jhits', name: '🔥 J-Hits', url: 'https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M?utm_source=generator&theme=0' },
+        { id: 'lofi', name: '☕ Chill Lofi', url: 'https://open.spotify.com/embed/playlist/37i9dQZF1DXdLEN7aqioXM?utm_source=generator&theme=0' },
+        { id: 'piano', name: '🎹 Piano', url: 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4sWSpwq3LiO?utm_source=generator&theme=0' }
+      ];
+
+      function setMediaSource(source) {
+        currentMediaSource = source;
+        if (source === 'spotify') {
+          stopRadioStream();
+          if (radioPlayerContainer) { radioPlayerContainer.style.display = 'none'; }
+          if (spotifyPlayerContainer) { spotifyPlayerContainer.style.display = 'block'; }
+          if (tabMediaSpotify) { tabMediaSpotify.classList.add('active'); }
+          if (tabMediaRadio) { tabMediaRadio.classList.remove('active'); }
+          if (tabMediaSpotifySv) { tabMediaSpotifySv.classList.add('active'); }
+          if (tabMediaRadioSv) { tabMediaRadioSv.classList.remove('active'); }
+        } else {
+          if (spotifyPlayerContainer) { spotifyPlayerContainer.style.display = 'none'; }
+          if (radioPlayerContainer) { radioPlayerContainer.style.display = 'block'; }
+          if (tabMediaRadio) { tabMediaRadio.classList.add('active'); }
+          if (tabMediaSpotify) { tabMediaSpotify.classList.remove('active'); }
+          if (tabMediaRadioSv) { tabMediaRadioSv.classList.add('active'); }
+          if (tabMediaSpotifySv) { tabMediaSpotifySv.classList.remove('active'); }
+
+          var radio = radioStations[currentRadioIndex];
+          var songTitle = document.getElementById('song-title');
+          var songArtist = document.getElementById('song-artist');
+          if (songTitle && radio) { songTitle.textContent = radio.name; }
+          if (songArtist && radio) { songArtist.textContent = radio.program; }
+        }
+      }
+
+      if (tabMediaRadio) {
+        tabMediaRadio.addEventListener('click', function() { setMediaSource('radio'); });
+      }
+      if (tabMediaSpotify) {
+        tabMediaSpotify.addEventListener('click', function() { setMediaSource('spotify'); });
+      }
+      if (tabMediaRadioSv) {
+        tabMediaRadioSv.addEventListener('click', function() { setMediaSource('radio'); });
+      }
+      if (tabMediaSpotifySv) {
+        tabMediaSpotifySv.addEventListener('click', function() { setMediaSource('spotify'); });
+      }
+
+      function selectSpotifyPlaylist(idx) {
+        var playlist = spotifyPlaylists[idx];
+        if (!playlist) return;
+        for (var i = 0; i < spotifyPlaylists.length; i++) {
+          var pill = document.getElementById('spotify-pill-' + i);
+          if (pill) {
+            if (i === idx) {
+              pill.classList.add('active');
+              pill.style.background = '#1db954';
+              pill.style.color = '#ffffff';
+              pill.style.borderColor = '#1db954';
+            } else {
+              pill.classList.remove('active');
+              pill.style.background = 'rgba(255, 255, 255, 0.08)';
+              pill.style.color = 'rgba(255, 255, 255, 0.7)';
+              pill.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+            }
+          }
+        }
+        if (spotifyEmbedIframe) {
+          spotifyEmbedIframe.src = playlist.url;
+        }
+      }
+
+      for (var sIdx = 0; sIdx < spotifyPlaylists.length; sIdx++) {
+        (function(index) {
+          var pill = document.getElementById('spotify-pill-' + index);
+          if (pill) {
+            pill.addEventListener('click', function() { selectSpotifyPlaylist(index); });
+          }
+        })(sIdx);
+      }
+
+      // Radio Station Selector Buttons (R1 and FM Sendai)
+      var radioR1 = document.getElementById('radio-r1');
+      var radioFM = document.getElementById('radio-fm');
+
+      function selectRadioStation(idx) {
+        var stationChanged = (currentRadioIndex !== idx);
+        currentRadioIndex = idx;
+        var pills = [radioR1, radioFM];
+        for (var i = 0; i < pills.length; i++) {
+          if (pills[i]) {
+            if (i === idx) {
+              pills[i].classList.add('active');
+            } else {
+              pills[i].classList.remove('active');
+            }
+          }
+        }
+        if (currentMediaSource === 'radio') {
+          setMediaSource('radio');
+          if (isAudioPlaying || stationChanged) {
+            playRadioStream(idx);
+          }
+        }
+      }
+
+      if (radioR1) { radioR1.addEventListener('click', function() { selectRadioStation(0); }); }
+      if (radioFM) { radioFM.addEventListener('click', function() { selectRadioStation(1); }); }
+
+      function nextSong() {
+        if (currentMediaSource === 'radio') {
+          selectRadioStation((currentRadioIndex + 1) % radioStations.length);
+        }
+      }
+
+      function prevSong() {
+        if (currentMediaSource === 'radio') {
+          selectRadioStation((currentRadioIndex - 1 + radioStations.length) % radioStations.length);
+        }
+      }
+
+      var nextSongBtn = document.getElementById('btn-next-song');
+      var prevSongBtn = document.getElementById('btn-prev-song');
+
+      if (playPauseBtn) {
+        playPauseBtn.addEventListener('click', function() {
+          if (currentMediaSource === 'radio') {
+            if (isAudioPlaying) {
+              stopRadioStream();
+            } else {
+              playRadioStream(currentRadioIndex);
+            }
+          }
+        });
+      }
+
+      if (nextSongBtn) { nextSongBtn.addEventListener('click', nextSong); }
+      if (prevSongBtn) { prevSongBtn.addEventListener('click', prevSong); }
+
+      // Volume Control Handler
+      var volumeSlider = document.getElementById('input-radio-volume');
+      var volumeLabel = document.getElementById('volume-val-label');
+
+      function updateRadioVolume() {
+        var val = volumeSlider ? parseInt(volumeSlider.value, 10) : 80;
+        var volumeRatio = val / 100;
+        if (radioAudioElem) {
+          try { radioAudioElem.volume = volumeRatio; } catch(e) {}
+        }
+        if (volumeLabel) {
+          volumeLabel.textContent = val + '%';
+        }
+      }
+
+      if (volumeSlider) {
+        volumeSlider.addEventListener('input', updateRadioVolume);
+        volumeSlider.addEventListener('change', updateRadioVolume);
+      }
+
+      // Initialize UI state without autoplaying on initial page load
+      currentRadioIndex = 0;
+      setMediaSource('radio');
+      if (radioR1) { radioR1.classList.add('active'); }
+      if (radioFM) { radioFM.classList.remove('active'); }
+      isAudioPlaying = false;
+      updatePlayPauseUI(false);
+      updateRadioVolume();
+
+      /* ------------------------------------------------------------------------
+         3. MONTHLY CALENDAR & INTERACTIVE SCHEDULE MANAGER (ES2018 Compliant)
+         ------------------------------------------------------------------------ */
+      var todayRealDateObj = new Date();
+      var todayRealYear = todayRealDateObj.getFullYear();
+      var todayRealMonth = todayRealDateObj.getMonth();
+      var todayRealDay = todayRealDateObj.getDate();
+
+      var currentCalendarYear = todayRealYear;
+      var currentCalendarMonth = todayRealMonth;
+
+      function getYYYYMMDD(year, monthIndex, dateNum) {
+        var m = monthIndex + 1;
+        var d = dateNum;
+        return year + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
+      }
+
+      var selectedDateStr = getYYYYMMDD(todayRealYear, todayRealMonth, todayRealDay);
+
+      var STORAGE_KEY = 'smart_display_events_v2';
+      var defaultEventsMap = {};
+      defaultEventsMap[selectedDateStr] = [
+        { id: '1', time: '09:30', text: '週次チームデザインレビュー' },
+        { id: '2', time: '13:00', text: 'スマートディスプレイUI動作検証' },
+        { id: '3', time: '16:30', text: '観葉植物への水やり & 部屋の換気' },
+        { id: '4', time: '19:00', text: '夕食の準備 & リラックスタイム' }
+      ];
+
+      function loadEventsMap() {
+        try {
+          var saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            return JSON.parse(saved);
+          }
+        } catch(e) {}
+        return defaultEventsMap;
+      }
+
+      function saveEventsMap() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(eventsMap));
+        } catch(e) {}
+      }
+
+      var eventsMap = loadEventsMap();
+
+      function formatDateTitle(dateKey) {
+        var parts = dateKey.split('-');
+        if (parts.length !== 3) { return dateKey; }
+        var y = parseInt(parts[0], 10);
+        var m = parseInt(parts[1], 10);
+        var d = parseInt(parts[2], 10);
+        var dateObj = new Date(y, m - 1, d);
+        var dayName = dayNames[dateObj.getDay()];
+
+        var isToday = (y === todayRealYear && (m - 1) === todayRealMonth && d === todayRealDay);
+        if (isToday) {
+          return '📅 本日の予定 (' + m + '月' + d + '日)';
+        }
+        return '📅 ' + y + '年' + m + '月' + d + '日 (' + dayName + ') の予定';
+      }
+
+      var editingEventId = null;
+
+      function renderScheduleList() {
+        var titleElem = document.getElementById('schedule-section-title');
+        if (titleElem) {
+          titleElem.textContent = formatDateTitle(selectedDateStr);
+        }
+
+        var container = document.getElementById('schedule-items-container');
+        if (!container) { return; }
+        container.innerHTML = '';
+
+        var list = eventsMap[selectedDateStr] || [];
+
+        if (list.length === 0) {
+          var emptyDiv = document.createElement('div');
+          emptyDiv.style.color = 'rgba(255,255,255,0.5)';
+          emptyDiv.style.fontSize = '12px';
+          emptyDiv.style.padding = '12px 8px';
+          emptyDiv.style.textAlign = 'center';
+          emptyDiv.textContent = '登録されている予定はありません。';
+          container.appendChild(emptyDiv);
+          return;
+        }
+
+        // Sort events chronologically, with All-day (終日) events listed first
+        list.sort(function(a, b) {
+          var aIsAllDay = (a.isAllDay === true || a.time === '終日');
+          var bIsAllDay = (b.isAllDay === true || b.time === '終日');
+          if (aIsAllDay && !bIsAllDay) { return -1; }
+          if (!aIsAllDay && bIsAllDay) { return 1; }
+          return (a.time || '').localeCompare(b.time || '');
+        });
+
+        for (var i = 0; i < list.length; i++) {
+          (function(item) {
+            var itemDiv = document.createElement('div');
+            itemDiv.className = 'schedule-item';
+            itemDiv.title = 'クリックして編集';
+
+            var timeDiv = document.createElement('div');
+            timeDiv.className = 'item-time';
+            timeDiv.textContent = item.time;
+
+            var textDiv = document.createElement('div');
+            textDiv.className = 'item-text';
+            textDiv.textContent = item.text;
+
+            var delBtn = document.createElement('button');
+            delBtn.className = 'btn-delete-event';
+            delBtn.innerHTML = '&times;';
+            delBtn.title = '予定を削除';
+            delBtn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              deleteScheduleItem(item.id);
+            });
+
+            // Click on schedule item to edit
+            itemDiv.addEventListener('click', function() {
+              openAddEventModal(selectedDateStr, item);
+            });
+
+            itemDiv.appendChild(timeDiv);
+            itemDiv.appendChild(textDiv);
+            itemDiv.appendChild(delBtn);
+
+            container.appendChild(itemDiv);
+          })(list[i]);
+        }
+      }
+
+      function deleteScheduleItem(id) {
+        var list = eventsMap[selectedDateStr];
+        if (!list) { return; }
+        eventsMap[selectedDateStr] = list.filter(function(item) {
+          return item.id !== id;
+        });
+        saveEventsMap();
+        renderScheduleList();
+        renderCalendar();
+      }
+
+      function openAddEventModal(dateKey, itemToEdit) {
+        if (dateKey) { selectedDateStr = dateKey; }
+
+        var dateTitleElem = document.getElementById('modal-event-date-title');
+        var timeInput = document.getElementById('input-event-time');
+        var chkAllDay = document.getElementById('chk-event-allday');
+        var textInput = document.getElementById('input-event-text');
+        var saveBtn = document.getElementById('btn-save-event');
+
+        if (itemToEdit) {
+          editingEventId = itemToEdit.id;
+          if (dateTitleElem) {
+            dateTitleElem.textContent = '✏️ 予定の編集';
+          }
+          var isAllDay = (itemToEdit.isAllDay === true || itemToEdit.time === '終日');
+          if (chkAllDay) { chkAllDay.checked = isAllDay; }
+          if (timeInput) {
+            if (isAllDay) {
+              timeInput.disabled = true;
+              timeInput.value = '10:00';
+            } else {
+              timeInput.disabled = false;
+              timeInput.value = itemToEdit.time || '10:00';
+            }
+          }
+          if (textInput) { textInput.value = itemToEdit.text || ''; }
+          if (saveBtn) { saveBtn.textContent = '更新する'; }
+        } else {
+          editingEventId = null;
+          if (dateTitleElem) {
+            dateTitleElem.textContent = '➕ 予定の追加';
+          }
+          if (chkAllDay) { chkAllDay.checked = false; }
+          if (timeInput) {
+            timeInput.disabled = false;
+            timeInput.value = '10:00';
+          }
+          if (textInput) { textInput.value = ''; }
+          if (saveBtn) { saveBtn.textContent = '保存する'; }
+        }
+
+        var modal = document.getElementById('modal-add-event');
+        if (modal) { modal.style.display = '-webkit-flex'; modal.style.display = 'flex'; }
+        if (textInput) { textInput.focus(); }
+      }
+
+      function closeAddEventModal() {
+        editingEventId = null;
+        var modal = document.getElementById('modal-add-event');
+        if (modal) { modal.style.display = 'none'; }
+        var inputTask = document.getElementById('input-event-text');
+        if (inputTask) { inputTask.value = ''; }
+      }
+
+      function saveNewEvent() {
+        var timeInput = document.getElementById('input-event-time');
+        var chkAllDay = document.getElementById('chk-event-allday');
+        var textInput = document.getElementById('input-event-text');
+
+        var isAllDay = chkAllDay ? chkAllDay.checked : false;
+        var timeVal = isAllDay ? '終日' : (timeInput ? timeInput.value : '10:00');
+        var textVal = textInput ? textInput.value.trim() : '';
+
+        if (!textVal) {
+          alert('予定の内容を入力してください。');
+          return;
+        }
+
+        if (!eventsMap[selectedDateStr]) {
+          eventsMap[selectedDateStr] = [];
+        }
+
+        if (editingEventId) {
+          // EDIT existing event
+          var list = eventsMap[selectedDateStr];
+          for (var i = 0; i < list.length; i++) {
+            if (list[i].id === editingEventId) {
+              list[i].time = timeVal;
+              list[i].isAllDay = isAllDay;
+              list[i].text = textVal;
+              break;
+            }
+          }
+        } else {
+          // CREATE new event
+          var newId = '' + new Date().getTime();
+          eventsMap[selectedDateStr].push({
+            id: newId,
+            time: timeVal,
+            isAllDay: isAllDay,
+            text: textVal
+          });
+        }
+
+        saveEventsMap();
+        closeAddEventModal();
+        renderScheduleList();
+        renderCalendar();
+      }
+
+      // Modal Event Listeners
+      var btnAddScheduleHeader = document.getElementById('btn-add-schedule');
+      var btnCloseEventModal = document.getElementById('btn-close-event-modal');
+      var btnCancelEventModal = document.getElementById('btn-cancel-event-modal');
+      var btnSaveEvent = document.getElementById('btn-save-event');
+      var chkEventAllDay = document.getElementById('chk-event-allday');
+      var modalAddEvent = document.getElementById('modal-add-event');
+
+      if (chkEventAllDay) {
+        chkEventAllDay.addEventListener('change', function() {
+          var timeInput = document.getElementById('input-event-time');
+          if (timeInput) {
+            timeInput.disabled = this.checked;
+          }
+        });
+      }
+
+      if (btnAddScheduleHeader) {
+        btnAddScheduleHeader.addEventListener('click', function() {
+          openAddEventModal(selectedDateStr);
+        });
+      }
+      if (btnCloseEventModal) {
+        btnCloseEventModal.addEventListener('click', closeAddEventModal);
+      }
+      if (btnCancelEventModal) {
+        btnCancelEventModal.addEventListener('click', closeAddEventModal);
+      }
+      if (btnSaveEvent) {
+        btnSaveEvent.addEventListener('click', saveNewEvent);
+      }
+      var inputEventText = document.getElementById('input-event-text');
+      if (inputEventText) {
+        inputEventText.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.keyCode === 13) {
+            e.preventDefault();
+            saveNewEvent();
+          }
+        });
+      }
+      if (modalAddEvent) {
+        modalAddEvent.addEventListener('click', function(e) {
+          if (e.target === modalAddEvent) {
+            closeAddEventModal();
+          }
+        });
+      }
+
+      function renderCalendar() {
+        var monthTitleElem = document.getElementById('calendar-month-year');
+        if (monthTitleElem) {
+          monthTitleElem.textContent = currentCalendarYear + '年 ' + (currentCalendarMonth + 1) + '月';
+        }
+
+        var btnToday = document.getElementById('btn-cal-today');
+        if (btnToday) {
+          if (currentCalendarYear !== todayRealYear || currentCalendarMonth !== todayRealMonth) {
+            btnToday.style.display = 'inline-block';
+          } else {
+            btnToday.style.display = 'none';
+          }
+        }
+
+        var firstDayIndex = new Date(currentCalendarYear, currentCalendarMonth, 1).getDay();
+        var totalDaysInMonth = new Date(currentCalendarYear, currentCalendarMonth + 1, 0).getDate();
+
+        var tbody = document.getElementById('calendar-body-rows');
+        if (!tbody) { return; }
+        tbody.innerHTML = '';
+
+        var dayCounter = 1;
+        var hasFinished = false;
+
+        for (var r = 0; r < 6; r++) {
+          if (hasFinished) { break; }
+          var tr = document.createElement('tr');
+
+          for (var c = 0; c < 7; c++) {
+            var td = document.createElement('td');
+
+            if (r === 0 && c < firstDayIndex) {
+              td.textContent = '';
+            } else if (dayCounter > totalDaysInMonth) {
+              td.textContent = '';
+              hasFinished = true;
+            } else {
+              var cellSpan = document.createElement('span');
+              cellSpan.className = 'calendar-date-cell';
+              cellSpan.textContent = dayCounter;
+
+              var dateKey = getYYYYMMDD(currentCalendarYear, currentCalendarMonth, dayCounter);
+
+              // Today highlight
+              if (currentCalendarYear === todayRealYear && currentCalendarMonth === todayRealMonth && dayCounter === todayRealDay) {
+                cellSpan.classList.add('today');
+              }
+
+              // Selected date highlight
+              if (dateKey === selectedDateStr) {
+                cellSpan.classList.add('selected');
+              }
+
+              // Event indicator dot
+              if (eventsMap[dateKey] && eventsMap[dateKey].length > 0) {
+                cellSpan.classList.add('has-event');
+              }
+
+              // Click listener to select date & add schedule
+              (function(key) {
+                cellSpan.addEventListener('click', function(e) {
+                  e.stopPropagation();
+                  selectedDateStr = key;
+                  renderCalendar();
+                  renderScheduleList();
+                  openAddEventModal(key);
+                });
+              })(dateKey);
+
+              td.appendChild(cellSpan);
+              dayCounter++;
+            }
+            tr.appendChild(td);
+          }
+          tbody.appendChild(tr);
+        }
+      }
+
+      var btnCalPrev = document.getElementById('btn-cal-prev');
+      var btnCalNext = document.getElementById('btn-cal-next');
+      var btnCalToday = document.getElementById('btn-cal-today');
+
+      if (btnCalPrev) {
+        btnCalPrev.addEventListener('click', function() {
+          currentCalendarMonth--;
+          if (currentCalendarMonth < 0) {
+            currentCalendarMonth = 11;
+            currentCalendarYear--;
+          }
+          renderCalendar();
+        });
+      }
+
+      if (btnCalNext) {
+        btnCalNext.addEventListener('click', function() {
+          currentCalendarMonth++;
+          if (currentCalendarMonth > 11) {
+            currentCalendarMonth = 0;
+            currentCalendarYear++;
+          }
+          renderCalendar();
+        });
+      }
+
+      if (btnCalToday) {
+        btnCalToday.addEventListener('click', function() {
+          currentCalendarYear = todayRealYear;
+          currentCalendarMonth = todayRealMonth;
+          selectedDateStr = getYYYYMMDD(todayRealYear, todayRealMonth, todayRealDay);
+          renderCalendar();
+          renderScheduleList();
+        });
+      }
+
+      renderCalendar();
+      renderScheduleList();
+
+      /* ------------------------------------------------------------------------
+         4. PHOTO SLIDESHOW MANAGER (ES2018 Compliant)
+         ------------------------------------------------------------------------ */
+      var albums = {
+        '1': [
+          {
+            url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
+            title: 'Lake Motosu Sunset',
+            subtitle: '山梨県 - 本栖湖夕景',
+            tag: '富士山 & 本栖湖'
+          },
+          {
+            url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80',
+            title: 'Mt. Fuji Morning Reflection',
+            subtitle: '山梨県 - 逆さ富士',
+            tag: '富士山 & 本栖湖'
+          },
+          {
+            url: 'https://images.unsplash.com/photo-1528164344705-47542687990d?auto=format&fit=crop&w=1200&q=80',
+            title: 'Mt. Fuji & Sakura',
+            subtitle: '山梨県 - 桜と富士山',
+            tag: '富士山 & 本栖湖'
+          }
+        ],
+        '2': [
+          {
+            url: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=1200&q=80',
+            title: 'Mystic Forest & Fog',
+            subtitle: '屋久島 - 原生林の静寂',
+            tag: '屋久島 神秘の森'
+          },
+          {
+            url: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80',
+            title: 'Arashiyama Bamboo Grove',
+            subtitle: '京都 - 嵐山竹林の小径',
+            tag: '京都 嵐山'
+          },
+          {
+            url: 'https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=1200&q=80',
+            title: 'Taisho Pond & Hotaka',
+            subtitle: '長野県 - 上高地 大正池',
+            tag: '上高地 絶景'
+          }
+        ],
+        '3': [
+          {
+            url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80',
+            title: 'Alpine Morning Glow',
+            subtitle: '北アルプス - 朝焼けの連峰',
+            tag: '北アルプス 朝景'
+          },
+          {
+            url: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80',
+            title: 'Tokyo Night Panorama',
+            subtitle: '東京都 - 夜景パノラマ',
+            tag: '東京 煌めく夜景'
+          },
+          {
+            url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
+            title: 'Tropical Ocean Sunset',
+            subtitle: '沖縄県 - サンセットビーチ',
+            tag: '南国 リゾート'
+          }
+        ]
+      };
+
+      var currentAlbumId = '1';
+      var photos = albums[currentAlbumId];
+      var currentPhotoIndex = 0;
+      var slideshowTimer = null;
+      var isSlideshowPlaying = true;
+
+      function updateSlideBackgrounds() {
+        var slides = document.querySelectorAll('.photo-bg-slide');
+        for (var i = 0; i < slides.length; i++) {
+          if (photos[i]) {
+            slides[i].style.backgroundImage = "url('" + photos[i].url + "')";
+          }
+        }
+      }
+
+      function switchAlbum(albumId) {
+        if (!albums[albumId]) { return; }
+        currentAlbumId = albumId;
+        photos = albums[currentAlbumId];
+
+        var pills = document.querySelectorAll('.album-pill');
+        for (var i = 0; i < pills.length; i++) {
+          pills[i].classList.remove('active');
+        }
+        var activePill = document.getElementById('btn-album-' + albumId);
+        if (activePill) {
+          activePill.classList.add('active');
+        }
+
+        updateSlideBackgrounds();
+        showPhoto(0);
+        if (isSlideshowPlaying) {
+          startSlideshow();
+        }
+      }
+
+      function showPhoto(index) {
+        if (index < 0) {
+          index = photos.length - 1;
+        } else if (index >= photos.length) {
+          index = 0;
+        }
+        currentPhotoIndex = index;
+
+        var slides = document.querySelectorAll('.photo-bg-slide');
+        for (var i = 0; i < slides.length; i++) {
+          if (i === currentPhotoIndex) {
+            slides[i].classList.add('active');
+          } else {
+            slides[i].classList.remove('active');
+          }
+        }
+
+        var photoData = photos[currentPhotoIndex];
+        var titleElem = document.getElementById('photo-title');
+        var subtitleElem = document.getElementById('photo-subtitle');
+        var tagElem = document.getElementById('photo-location-tag');
+        var ambientBgElem = document.getElementById('ambient-photo-bg');
+
+        if (titleElem && photoData) { titleElem.textContent = photoData.title; }
+        if (subtitleElem && photoData) { subtitleElem.textContent = photoData.subtitle; }
+        if (tagElem && photoData) { tagElem.textContent = photoData.tag; }
+        if (ambientBgElem && photoData) {
+          ambientBgElem.style.backgroundImage = "url('" + photoData.url + "')";
+        }
+      }
+
+      function startSlideshow() {
+        stopSlideshow();
+        slideshowTimer = setInterval(function() {
+          showPhoto(currentPhotoIndex + 1);
+        }, 5000);
+        isSlideshowPlaying = true;
+        updateSlideshowButtons();
+      }
+
+      function stopSlideshow() {
+        if (slideshowTimer) {
+          clearInterval(slideshowTimer);
+          slideshowTimer = null;
+        }
+        isSlideshowPlaying = false;
+        updateSlideshowButtons();
+      }
+
+      function updateSlideshowButtons() {
+        var pauseIcon = document.getElementById('icon-slide-pause');
+        var playIcon = document.getElementById('icon-slide-play');
+        if (pauseIcon && playIcon) {
+          if (isSlideshowPlaying) {
+            pauseIcon.style.display = 'inline-block';
+            playIcon.style.display = 'none';
+          } else {
+            pauseIcon.style.display = 'none';
+            playIcon.style.display = 'inline-block';
+          }
+        }
+      }
+
+      var prevPhotoBtn = document.getElementById('btn-prev-photo');
+      var nextPhotoBtn = document.getElementById('btn-next-photo');
+      var toggleSlideshowBtn = document.getElementById('btn-toggle-slideshow');
+      var btnAlbum1 = document.getElementById('btn-album-1');
+      var btnAlbum2 = document.getElementById('btn-album-2');
+      var btnAlbum3 = document.getElementById('btn-album-3');
+
+      if (prevPhotoBtn) {
+        prevPhotoBtn.addEventListener('click', function() { showPhoto(currentPhotoIndex - 1); });
+      }
+
+      if (nextPhotoBtn) {
+        nextPhotoBtn.addEventListener('click', function() { showPhoto(currentPhotoIndex + 1); });
+      }
+
+      if (toggleSlideshowBtn) {
+        toggleSlideshowBtn.addEventListener('click', function() {
+          if (isSlideshowPlaying) { stopSlideshow(); } else { startSlideshow(); }
+        });
+      }
+
+      if (btnAlbum1) { btnAlbum1.addEventListener('click', function() { switchAlbum('1'); }); }
+      if (btnAlbum2) { btnAlbum2.addEventListener('click', function() { switchAlbum('2'); }); }
+      if (btnAlbum3) { btnAlbum3.addEventListener('click', function() { switchAlbum('3'); }); }
+
+      updateSlideBackgrounds();
+      startSlideshow();
+
+      /* ------------------------------------------------------------------------
+         5. SCHEDULE / TASK INTERACTIVITY
+         ------------------------------------------------------------------------ */
+      var scheduleItems = document.querySelectorAll('.schedule-item');
+      for (var i = 0; i < scheduleItems.length; i++) {
+        (function(item) {
+          item.addEventListener('click', function() {
+            if (item.classList.contains('completed')) {
+              item.classList.remove('completed');
+            } else {
+              item.classList.add('completed');
+            }
+          });
+        })(scheduleItems[i]);
+      }
+
+      /* ------------------------------------------------------------------------
+         6. AMBIENT PHOTO FRAME MODE TOGGLE
+         ------------------------------------------------------------------------ */
+      var ambientScreen = document.getElementById('ambient-screen');
+      var btnToggleAmbient = document.getElementById('btn-toggle-ambient');
+      var btnExpandPhoto = document.getElementById('btn-expand-photo');
+      var btnCloseAmbient = document.getElementById('btn-close-ambient');
+
+      function openAmbientMode() {
+        if (ambientScreen) { ambientScreen.classList.add('active'); }
+      }
+
+      function closeAmbientMode() {
+        if (ambientScreen) { ambientScreen.classList.remove('active'); }
+      }
+
+      if (btnToggleAmbient) { btnToggleAmbient.addEventListener('click', openAmbientMode); }
+      if (btnExpandPhoto) { btnExpandPhoto.addEventListener('click', openAmbientMode); }
+      if (btnCloseAmbient) { btnCloseAmbient.addEventListener('click', closeAmbientMode); }
+
+      /* ------------------------------------------------------------------------
+         7. FULLSCREEN API TOGGLE
+         ------------------------------------------------------------------------ */
+      var btnFullscreen = document.getElementById('btn-fullscreen');
+      if (btnFullscreen) {
+        btnFullscreen.addEventListener('click', function() {
+          if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            if (document.documentElement.requestFullscreen) {
+              document.documentElement.requestFullscreen();
+            } else if (document.documentElement.webkitRequestFullscreen) {
+              document.documentElement.webkitRequestFullscreen();
+            }
+          } else {
+            if (document.exitFullscreen) {
+              document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+              document.webkitExitFullscreen();
+            }
+          }
+        });
+      }
+
+      /* ------------------------------------------------------------------------
+         8. WEATHER VIEW MODE SWITCHER (ES2018 / iOS 12 Compliant)
+         ------------------------------------------------------------------------ */
+      var btnWeather24h = document.getElementById('btn-weather-mode-24h');
+      var btnWeatherWeekly = document.getElementById('btn-weather-mode-weekly');
+
+      var section24h = document.getElementById('weather-section-24h');
+      var sectionWeekly = document.getElementById('weather-section-weekly');
+      var weatherTitleText = document.getElementById('weather-section-title');
+
+      function setWeatherMode(mode) {
+        var btns = [btnWeather24h, btnWeatherWeekly];
+        for (var i = 0; i < btns.length; i++) {
+          if (btns[i]) { btns[i].classList.remove('active'); }
+        }
+
+        if (mode === '24h') {
+          if (btnWeather24h) { btnWeather24h.classList.add('active'); }
+          if (section24h) { section24h.style.display = 'block'; }
+          if (sectionWeekly) { sectionWeekly.style.display = 'none'; }
+          if (weatherTitleText) { weatherTitleText.textContent = '📈 24時間 気温推移 (1時間ごと)'; }
+        } else if (mode === 'weekly') {
+          if (btnWeatherWeekly) { btnWeatherWeekly.classList.add('active'); }
+          if (section24h) { section24h.style.display = 'none'; }
+          if (sectionWeekly) { sectionWeekly.style.display = 'block'; }
+          if (weatherTitleText) { weatherTitleText.textContent = '📅 週間天気予報一覧'; }
+        }
+      }
+
+      if (btnWeather24h) {
+        btnWeather24h.addEventListener('click', function() { setWeatherMode('24h'); });
+      }
+      if (btnWeatherWeekly) {
+        btnWeatherWeekly.addEventListener('click', function() { setWeatherMode('weekly'); });
+      }
+
+      // Default weather view mode
+      setWeatherMode('24h');
+
+      /* ------------------------------------------------------------------------
+         10. GOOGLE NEWS TOP 10 RSS INTEGRATION (ES2018 Compliant)
+         ------------------------------------------------------------------------ */
+      function getTimeAgoStr(pubDateStr) {
+        if (!pubDateStr) { return '最新'; }
+        var pubTime = new Date(pubDateStr).getTime();
+        var nowTime = new Date().getTime();
+        if (isNaN(pubTime)) { return '最新'; }
+        var diffMin = Math.floor((nowTime - pubTime) / (1000 * 60));
+        if (diffMin < 1) { return 'たった今'; }
+        if (diffMin < 60) { return diffMin + '分前'; }
+        var diffHours = Math.floor(diffMin / 60);
+        if (diffHours < 24) { return diffHours + '時間前'; }
+        var diffDays = Math.floor(diffHours / 24);
+        return diffDays + '日前';
+      }
+
+      function getCategoryTag(titleStr, publisherStr) {
+        if (publisherStr) {
+          return { name: publisherStr, class: 'tag-society' };
+        }
+        if (titleStr.indexOf('AI') !== -1 || titleStr.indexOf('IT') !== -1 || titleStr.indexOf('スマホ') !== -1 || titleStr.indexOf('ネット') !== -1) {
+          return { name: 'IT・科学', class: 'tag-tech' };
+        }
+        if (titleStr.indexOf('株') !== -1 || titleStr.indexOf('円') !== -1 || titleStr.indexOf('経済') !== -1 || titleStr.indexOf('企業') !== -1) {
+          return { name: '経済', class: 'tag-economy' };
+        }
+        if (titleStr.indexOf('野球') !== -1 || titleStr.indexOf('サッカー') !== -1 || titleStr.indexOf('スポーツ') !== -1 || titleStr.indexOf('選手') !== -1) {
+          return { name: 'スポーツ', class: 'tag-sports' };
+        }
+        if (titleStr.indexOf('映画') !== -1 || titleStr.indexOf('ドラマ') !== -1 || titleStr.indexOf('アニメ') !== -1) {
+          return { name: 'エンタメ', class: 'tag-entertainment' };
+        }
+        if (titleStr.indexOf('米') !== -1 || titleStr.indexOf('国') !== -1 || titleStr.indexOf('海外') !== -1) {
+          return { name: '国際', class: 'tag-global' };
+        }
+        return { name: '社会', class: 'tag-society' };
+      }
+
+      function renderGoogleNewsFeed(items) {
+        var container = document.getElementById('news-container');
+        if (!container || !items) { return; }
+
+        container.innerHTML = '';
+        var count = Math.min(items.length, 10);
+
+        for (var i = 0; i < count; i++) {
+          (function(item) {
+            var rawTitle = item.title || '';
+            var titleParts = rawTitle.split(' - ');
+            var mainTitle = rawTitle;
+            var publisherName = 'Google ニュース';
+
+            if (titleParts.length > 1) {
+              publisherName = titleParts[titleParts.length - 1];
+              mainTitle = titleParts.slice(0, titleParts.length - 1).join(' - ');
+            }
+
+            var catTag = getCategoryTag(mainTitle, publisherName);
+            var timeAgo = getTimeAgoStr(item.pubDate);
+
+            var itemDiv = document.createElement('div');
+            itemDiv.className = 'news-item';
+            itemDiv.style.cursor = 'pointer';
+            itemDiv.title = 'クリックして記事を読む (Google ニュース)';
+
+            var metaDiv = document.createElement('div');
+            metaDiv.className = 'news-meta';
+
+            var tagSpan = document.createElement('span');
+            tagSpan.className = 'news-tag ' + catTag.class;
+            tagSpan.textContent = catTag.name;
+
+            var timeSpan = document.createElement('span');
+            timeSpan.className = 'news-time';
+            timeSpan.textContent = timeAgo;
+
+            metaDiv.appendChild(tagSpan);
+            metaDiv.appendChild(timeSpan);
+
+            var titleDiv = document.createElement('div');
+            titleDiv.className = 'news-title';
+            titleDiv.textContent = mainTitle;
+
+            itemDiv.appendChild(metaDiv);
+            itemDiv.appendChild(titleDiv);
+
+            if (item.link) {
+              itemDiv.addEventListener('click', function() {
+                window.open(item.link, '_blank');
+              });
+            }
+
+            container.appendChild(itemDiv);
+          })(items[i]);
+        }
+
+        var updatedLabel = document.getElementById('news-last-updated');
+        if (updatedLabel) {
+          var now = new Date();
+          var h = now.getHours();
+          var m = now.getMinutes();
+          var timeStr = (h < 10 ? '0' + h : '' + h) + ':' + (m < 10 ? '0' + m : '' + m) + '更新';
+          updatedLabel.textContent = timeStr;
+        }
+      }
+
+      function fetchGoogleNewsFeed() {
+        var googleRssUrl = 'https://news.google.com/rss?hl=ja&gl=JP&ceid=JP:ja';
+        var apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(googleRssUrl);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', apiUrl, true);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+              var data = JSON.parse(xhr.responseText);
+              if (data && data.status === 'ok' && data.items && data.items.length > 0) {
+                renderGoogleNewsFeed(data.items);
+              }
+            } catch(e) {
+              console.log('Error parsing Google News RSS feed:', e);
+            }
+          }
+        };
+        xhr.send();
+      }
+
+      // Initial Fetch on Load
+      fetchGoogleNewsFeed();
+
+      // 1-Hour Auto-Refresh Timer (3600000ms = 1 hour)
+      setInterval(function() {
+        fetchGoogleNewsFeed();
+      }, 3600000);
+
+      // Manual Refresh Button Event Listener
+      var btnRefreshNews = document.getElementById('btn-refresh-news');
+      if (btnRefreshNews) {
+        btnRefreshNews.addEventListener('click', function() {
+          fetchGoogleNewsFeed();
+        });
+      }
+
+    })();
+  </script>
+</body>
+</html>

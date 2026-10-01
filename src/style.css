@@ -1,0 +1,287 @@
+:root {
+  --primary: #00e5ff;
+  --secondary: #ff3366;
+  --accent: #ffd700;
+  --bg-dark: #0f172a;
+  --panel-bg: rgba(30, 41, 59, 0.85);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+body {
+  font-family: 'Outfit', 'Inter', -apple-system, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ゲームコンテナ */
+#game-container {
+  position: relative;
+  width: 95vw;
+  max-width: 1280px;
+  height: 85vh;
+  max-height: 760px;
+  background: #111827;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 229, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* スコアボード */
+.scoreboard {
+  height: 64px;
+  background: var(--panel-bg);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 10;
+}
+
+.team-score {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.team-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.team-badge.offense {
+  background: #ffffff;
+  color: #111;
+  border: 2px solid #333;
+}
+
+.team-badge.defense {
+  background: #1a1a1a;
+  color: #fff;
+  border: 2px solid #fff;
+}
+
+.team-name {
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+.score-num {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--accent);
+  min-width: 40px;
+  text-align: center;
+}
+
+.game-status-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.down-distance {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: 1px;
+}
+
+.game-clock {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* キャンバス領域 */
+.canvas-wrapper {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #1b4326;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* オーバーレイ・通知メッセージ */
+.play-banner {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(8px);
+  padding: 10px 24px;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  pointer-events: none;
+  z-index: 5;
+  transition: all 0.3s ease;
+}
+
+/* プレー選択モーダル */
+.play-select-modal {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  z-index: 20;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.play-select-modal.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-size: 22px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #ffffff, var(--primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.formation-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.section-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.formation-card {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.formation-card:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.formation-card.selected {
+  border-color: var(--accent);
+  background: rgba(255, 215, 0, 0.12);
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+}
+
+.card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.card-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.btn-start-play {
+  margin-top: 20px;
+  align-self: center;
+  padding: 14px 48px;
+  background: linear-gradient(135deg, var(--primary), #00b0ff);
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 800;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0, 229, 255, 0.4);
+  transition: all 0.2s ease;
+}
+
+.btn-start-play:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 30px rgba(0, 229, 255, 0.6);
+}
+
+/* 操作ガイダンス */
+.controls-bar {
+  height: 44px;
+  background: rgba(15, 23, 42, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.key-tag {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
