@@ -676,7 +676,7 @@
        WIDGET 3: PHOTO SLIDESHOW FRAME
        ========================================================================== */
     .photo-card {
-      height: 34%;
+      height: calc(50% - 6px);
       position: relative;
       display: -webkit-flex;
       display: flex;
@@ -716,11 +716,12 @@
       height: 100%;
       background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0,0,0,0.7) 100%);
       z-index: 1;
+      pointer-events: none;
     }
 
     .photo-header {
       position: relative;
-      z-index: 2;
+      z-index: 10;
       padding: 10px 12px;
       display: -webkit-flex;
       display: flex;
@@ -728,6 +729,11 @@
       align-items: center;
       -webkit-justify-content: space-between;
       justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .photo-header > * {
+      pointer-events: auto;
     }
 
     .photo-tag {
@@ -785,7 +791,7 @@
 
     .photo-footer {
       position: relative;
-      z-index: 2;
+      z-index: 10;
       padding: 10px 12px;
       display: -webkit-flex;
       display: flex;
@@ -793,6 +799,11 @@
       align-items: flex-end;
       -webkit-justify-content: space-between;
       justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .photo-footer > * {
+      pointer-events: auto;
     }
 
     .photo-info-title {
@@ -846,7 +857,7 @@
        WIDGET 4: HIGH VISIBILITY CALENDAR & SCHEDULE CARD
        ========================================================================== */
     .calendar-schedule-card {
-      height: calc(66% - 12px);
+      height: calc(50% - 6px);
       padding: 14px 16px;
       display: -webkit-flex;
       display: flex;
@@ -909,33 +920,40 @@
       color: #ffffff;
     }
 
-    /* Calendar and News 50/50 Split Layout */
-    .calendar-news-split-row {
+    /* Calendar, News & Schedule Card View Switcher */
+    .widget-switch-header {
       display: -webkit-flex;
       display: flex;
-      margin-bottom: 6px;
+      -webkit-align-items: center;
+      align-items: center;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      margin-bottom: 8px;
       padding-bottom: 6px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      max-height: 230px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      -webkit-flex-shrink: 0;
+      flex-shrink: 0;
     }
 
-    .calendar-col-left {
-      width: 48%;
-      padding-right: 8px;
-      border-right: 1px solid rgba(255, 255, 255, 0.1);
-      display: -webkit-flex;
-      display: flex;
-      -webkit-flex-direction: column;
-      flex-direction: column;
+    .widget-switch-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.95);
+      white-space: nowrap;
     }
 
-    .news-col-right {
-      width: 52%;
-      padding-left: 8px;
-      display: -webkit-flex;
-      display: flex;
+    .widget-view-section {
+      -webkit-flex: 1;
+      flex: 1;
+      display: none;
       -webkit-flex-direction: column;
       flex-direction: column;
+      overflow: hidden;
+    }
+
+    .widget-view-section.active {
+      display: -webkit-flex;
+      display: flex;
     }
 
     /* Compact Monthly Calendar Table */
@@ -943,7 +961,7 @@
       width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     .calendar-compact-table th {
@@ -965,9 +983,9 @@
 
     .calendar-date-cell {
       display: inline-block;
-      width: 23px;
-      height: 23px;
-      line-height: 23px;
+      width: 25px;
+      height: 25px;
+      line-height: 25px;
       border-radius: 50%;
       font-size: 12px;
       font-weight: 700;
@@ -1123,8 +1141,30 @@
       -webkit-overflow-scrolling: touch;
       -webkit-flex: 1;
       flex: 1;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
       padding-top: 6px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+    }
+
+    .schedule-sub-list::-webkit-scrollbar,
+    .news-scroll-list::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .schedule-sub-list::-webkit-scrollbar-track,
+    .news-scroll-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .schedule-sub-list::-webkit-scrollbar-thumb,
+    .news-scroll-list::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 4px;
+    }
+
+    .schedule-sub-list::-webkit-scrollbar-thumb:hover,
+    .news-scroll-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.5);
     }
 
     .schedule-item {
@@ -1422,16 +1462,15 @@
       </div>
 
       <div class="header-right">
-        <div class="status-icon" id="wifi-status">
+        <div class="status-icon" id="wake-lock-status" title="画面のスリープ防止（常時点灯）">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12.55a11 11 0 0 1 14 0"></path>
-            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-            <line x1="12" y1="20" x2="12.01" y2="20" stroke-width="3"></line>
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
           </svg>
-          Wi-Fi
+          <span id="wake-lock-text">常時点灯</span>
         </div>
 
-        <div class="status-icon">
+        <div class="status-icon" id="battery-status" title="バッテリー状態">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect>
             <line x1="22" y1="11" x2="22" y2="13"></line>
@@ -1439,7 +1478,7 @@
             <line x1="9" y1="10" x2="9" y2="14" stroke="#10b981" stroke-width="2"></line>
             <line x1="12" y1="10" x2="12" y2="14" stroke="#10b981" stroke-width="2"></line>
           </svg>
-          98%
+          <span id="battery-text">--%</span>
         </div>
 
         <button class="icon-btn" id="btn-toggle-ambient">
@@ -1531,20 +1570,6 @@
               <div class="date-display-top-right" id="clock-date-top-right" style="display: none;">
                 2026年9月29日 (火)
               </div>
-
-              <div class="weather-current-box">
-                <svg class="weather-icon-svg" viewBox="0 0 64 64">
-                  <circle cx="26" cy="26" r="10" fill="#f59e0b"/>
-                  <path d="M38 32 a12 12 0 0 1 0 24 h-20 a10 10 0 0 1 0 -20 a12 12 0 0 1 20 -4 z" fill="#60a5fa" opacity="0.9"/>
-                </svg>
-                <div>
-                  <div class="weather-temp">22°C</div>
-                  <div class="weather-condition" style="display:-webkit-flex; display:flex; -webkit-align-items:center; align-items:center;">
-                    <span>晴れのち曇り</span>
-                    <span style="font-size:9px; font-weight:700; color:#60a5fa; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.3); padding:1px 5px; border-radius:4px; margin-left:4px;">気象庁 仙台</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -1559,15 +1584,51 @@
 
           <!-- Weather Mode Switch Control Header -->
           <div class="weather-switch-header">
-            <span class="weather-label-title-text" id="weather-section-title">📈 24時間 気温推移 (Yahoo!天気)</span>
+            <span class="weather-label-title-text" id="weather-section-title">☀️ 本日の天気 (気象庁 仙台)</span>
             <div class="tab-pills">
-              <button class="tab-btn active" id="btn-weather-mode-24h">📈 24時間気温</button>
+              <button class="tab-btn active" id="btn-weather-mode-today">☀️ 本日の天気</button>
+              <button class="tab-btn" id="btn-weather-mode-24h">📈 24時間気温</button>
               <button class="tab-btn" id="btn-weather-mode-weekly">📅 週間予報</button>
             </div>
           </div>
 
+          <!-- Section 0: 本日の天気 (デフォルト表示: 最高・最低気温, 傘の要不要, 服装アドバイス) -->
+          <div class="weather-dual-section" id="weather-section-today" style="display: block;">
+            <div class="today-weather-card" style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 14px; padding: 12px 16px;">
+              <div style="display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: space-between; justify-content: space-between; margin-bottom: 8px;">
+                <div style="display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center;">
+                  <span id="today-weather-icon" style="font-size: 34px; margin-right: 12px;">☀️</span>
+                  <div>
+                    <div id="today-weather-summary" style="font-size: 16px; font-weight: 800; color: #ffffff;">晴れ のち 曇り</div>
+                    <div style="font-size: 11px; color: rgba(255,255,255,0.65); margin-top: 1px;">📍 宮城県仙台市 (仙台管区気象台 発表)</div>
+                  </div>
+                </div>
+
+                <div style="text-align: right;">
+                  <div style="font-size: 18px; font-weight: 900;">
+                    <span id="today-temp-high" class="high-t">25°C</span> <span style="font-size: 13px; color: rgba(255,255,255,0.4);">/</span> <span id="today-temp-low" class="low-t">16°C</span>
+                  </div>
+                  <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 2px;">最高 / 最低気温</div>
+                </div>
+              </div>
+
+              <!-- Advice Box: Rain Gear + Clothing Advice + Laundry Advice -->
+              <div style="display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; background: rgba(255,255,255,0.06); border-radius: 10px; padding: 8px 12px; margin-top: 6px;">
+                <div style="font-size: 12px; font-weight: 700; color: #60a5fa; margin-bottom: 4px; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center;">
+                  <span id="today-rain-advice">☀️ 傘は不要です (降水確率 10%)</span>
+                </div>
+                <div style="font-size: 11.5px; color: rgba(255,255,255,0.9); line-height: 1.4; margin-bottom: 3px;">
+                  <span id="today-clothing-advice">👔 長袖シャツや薄手の羽織るものが丁度よい気候です。</span>
+                </div>
+                <div style="font-size: 11.5px; color: rgba(255,255,255,0.9); line-height: 1.4;">
+                  <span id="today-laundry-advice">🧺 厚手の衣服やバスタオルもよく乾く絶好の洗濯日和です！</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Section A: 24時間 気温グラフ (1時間刻み・横スクロール対応) -->
-          <div class="weather-dual-section" id="weather-section-24h">
+          <div class="weather-dual-section" id="weather-section-24h" style="display: none;">
             <div class="weather-label-title" style="margin-bottom: 4px;">
               <span style="font-size:11px; color:rgba(255,255,255,0.75);">📍 宮城県仙台市 | 1時間毎推移 (仙台管区気象台)</span>
               <span style="font-size:10px; color:#60a5fa; font-weight:bold;">👈 左右スクロールで24時間表示 ➔</span>
@@ -1917,43 +1978,58 @@
       <!-- RIGHT COLUMN -->
       <div class="grid-col grid-right">
 
-        <!-- Widget 3: Photo Slideshow Frame -->
+        <!-- Widget 3: Multi Purpose Frame (Photo Slideshow & Rain Radar) -->
         <section class="glass-panel photo-card card-space-bottom" id="photo-slideshow-widget">
-          <!-- Background Photo Slides -->
-          <div class="photo-bg-slide active" id="slide-0" style="background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80');"></div>
-          <div class="photo-bg-slide" id="slide-1" style="background-image: url('https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=1200&q=80');"></div>
-          <div class="photo-bg-slide" id="slide-2" style="background-image: url('https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80');"></div>
+          <!-- Background Photo Slides Container -->
+          <div id="photo-slides-container" style="position: absolute; top:0; left:0; width:100%; height:100%;"></div>
 
-          <div class="photo-overlay"></div>
-
-          <div class="photo-header">
-            <div class="photo-tag">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;">
-                <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
-              <span id="photo-location-tag">富士山 & 本栖湖</span>
-            </div>
-
-            <!-- Album Selector Buttons -->
-            <div style="display: -webkit-inline-flex; display: inline-flex; -webkit-align-items: center; align-items: center;">
-              <button class="album-pill active" id="btn-album-1">アルバム1</button>
-              <button class="album-pill" id="btn-album-2">アルバム2</button>
-              <button class="album-pill" id="btn-album-3">アルバム3</button>
-            </div>
-
-            <button class="icon-btn" id="btn-expand-photo" style="padding: 3px 7px; font-size:11px; margin-left: 4px;">
-              全画面フォト
-            </button>
+          <!-- Rain Radar Live Map Container (Sendai Focused) -->
+          <div id="rain-radar-container" style="position: absolute; top:0; left:0; width:100%; height:100%; display:none; z-index: 2;">
+            <iframe id="rain-radar-iframe" src="https://embed.windy.com/embed2.html?lat=38.2688&lon=140.8719&detailLat=38.2688&detailLon=140.8719&width=600&height=400&zoom=10&level=surface&overlay=radar&product=radar&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1" style="width:100%; height:100%; border:0; pointer-events:auto;"></iframe>
           </div>
 
-          <div class="photo-footer">
+          <!-- Empty State Placeholder (Visible when no photos selected yet) -->
+          <div class="photo-empty-placeholder" id="photo-empty-placeholder" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; background: rgba(15, 23, 42, 0.85); z-index: 2; text-align: center; padding: 16px; cursor: pointer;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.5" style="margin-bottom: 8px;">
+              <rect x="3" y="3" width="18" height="18" rx="3" ry="3"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <div style="font-size: 14px; font-weight: 700; color: #ffffff; margin-bottom: 4px;">📷 タップしてiPadの写真を選択</div>
+            <div style="font-size: 11px; color: rgba(255,255,255,0.65);">iPadの写真アプリからお好きな写真を選べます</div>
+          </div>
+
+          <div class="photo-overlay" id="photo-overlay-layer"></div>
+
+          <div class="photo-header">
+            <div style="display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-flex-wrap: wrap; flex-wrap: wrap;">
+              <div class="tab-pills" style="margin-right: 6px;">
+                <button class="tab-btn active" id="btn-tab-frame-photo">📷 フォト</button>
+                <button class="tab-btn" id="btn-tab-frame-radar">🌧️ 雨雲レーダー</button>
+              </div>
+
+              <button class="icon-btn" id="btn-select-ipad-photos" style="padding: 3px 8px; font-size:11px; margin-right: 6px; background: rgba(59, 130, 246, 0.35); border-color: rgba(59, 130, 246, 0.6);">
+                📷 写真を選択
+              </button>
+              <input type="file" id="input-ipad-photos" accept="image/*" multiple style="display:none;">
+
+              <button class="icon-btn" id="btn-open-jma-web" style="padding: 3px 8px; font-size:11px; margin-right: 6px; background: rgba(16, 185, 129, 0.35); border-color: rgba(16, 185, 129, 0.6); display: none;">
+                🔗 気象庁Web
+              </button>
+
+              <button class="icon-btn" id="btn-expand-photo" style="padding: 3px 7px; font-size:11px;">
+                全画面
+              </button>
+            </div>
+          </div>
+
+          <div class="photo-footer" id="photo-footer-layer">
             <div>
-              <div class="photo-info-title" id="photo-title">Lake Motosu Sunset</div>
-              <div class="photo-info-subtitle" id="photo-subtitle">山梨県 - Photo by Unsplash</div>
+              <div class="photo-info-title" id="photo-title">マイフォトスライドショー</div>
+              <div class="photo-info-subtitle" id="photo-subtitle">iPad 写真ライブラリ</div>
             </div>
 
-            <div class="slideshow-controls">
+            <div class="slideshow-controls" id="photo-slideshow-controls">
               <button class="slide-ctrl-btn" id="btn-prev-photo">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="15 18 9 12 15 6"></polyline>
@@ -1977,45 +2053,56 @@
           </div>
         </section>
 
-        <!-- Widget 4: CALENDAR, TOP 10 NEWS & SCHEDULE CARD -->
+        <!-- Widget 4: CALENDAR / GOOGLE NEWS (Top Switch) & TODAY'S SCHEDULE (Bottom Always Visible) -->
         <section class="glass-panel calendar-schedule-card">
           
-          <!-- 50/50 Split Row: Monthly Calendar (Left) + Top 10 News (Right) -->
-          <div class="calendar-news-split-row">
+          <!-- Widget View Switch Header (Calendar vs Google News) -->
+          <div class="widget-switch-header">
+            <span class="widget-switch-title" id="widget-switch-title">🗓️ カレンダー</span>
+            <div class="tab-pills">
+              <button class="tab-btn active" id="btn-tab-calendar">🗓️ カレンダー</button>
+              <button class="tab-btn" id="btn-tab-news">📰 Google ニュース</button>
+            </div>
+          </div>
+
+          <!-- Top Switch Area (Calendar or News) -->
+          <div class="widget-top-container" style="flex: 1.8; -webkit-flex: 1.8; min-height: 0; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; overflow: hidden; margin-bottom: 4px;">
             
-            <!-- Left Column (~50%): Monthly Calendar Grid -->
-            <div class="calendar-col-left">
-              <div class="combo-section-title">
+            <!-- Section 1: Monthly Calendar Grid -->
+            <div class="widget-view-section active" id="view-calendar" style="height: 100%; -webkit-flex-direction: column; flex-direction: column; overflow: hidden;">
+              <div class="combo-section-title" style="margin-bottom: 2px;">
                 <span style="display: -webkit-inline-flex; display: inline-flex; -webkit-align-items: center; align-items: center;">
                   <button class="cal-nav-btn" id="btn-cal-prev" title="前月">◀</button>
-                  <span id="calendar-month-year" style="margin: 0 4px; font-weight: 700;">2026年 9月</span>
+                  <span id="calendar-month-year" style="margin: 0 6px; font-weight: 700; font-size: 13px;">2026年 9月</span>
                   <button class="cal-nav-btn" id="btn-cal-next" title="翌月">▶</button>
                   <button class="cal-today-btn" id="btn-cal-today" style="display: none;" title="今月に戻る">今月</button>
                 </span>
-                <span style="font-size:9px; color:rgba(255,255,255,0.5);">● 予定</span>
+                <span style="font-size:9px; color:rgba(255,255,255,0.5);">● 予定あり</span>
               </div>
 
-              <table class="calendar-compact-table">
-                <thead>
-                  <tr>
-                    <th class="sun">日</th>
-                    <th>月</th>
-                    <th>火</th>
-                    <th>水</th>
-                    <th>木</th>
-                    <th>金</th>
-                    <th class="sat">土</th>
-                  </tr>
-                </thead>
-                <tbody id="calendar-body-rows">
-                  <!-- Dynamically rendered calendar dates -->
-                </tbody>
-              </table>
+              <div style="overflow: hidden; -webkit-flex: 1; flex: 1;">
+                <table class="calendar-compact-table">
+                  <thead>
+                    <tr>
+                      <th class="sun">日</th>
+                      <th>月</th>
+                      <th>火</th>
+                      <th>水</th>
+                      <th>木</th>
+                      <th>金</th>
+                      <th class="sat">土</th>
+                    </tr>
+                  </thead>
+                  <tbody id="calendar-body-rows">
+                    <!-- Dynamically rendered calendar dates -->
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <!-- Right Column (~50%): Today's Top 10 News -->
-            <div class="news-col-right">
-              <div class="combo-section-title">
+            <!-- Section 2: Today's Top 10 News -->
+            <div class="widget-view-section" id="view-news" style="height: 100%; -webkit-flex-direction: column; flex-direction: column;">
+              <div class="combo-section-title" style="margin-bottom: 4px;">
                 <span>📰 Google ニュース TOP 10</span>
                 <button class="btn-news-refresh" id="btn-refresh-news">
                   <span id="news-last-updated" style="margin-right:2px;">1時間毎更新</span>
@@ -2030,14 +2117,16 @@
 
           </div>
 
-          <!-- Section 2: Selected Date Schedule List Below Split Row -->
-          <div class="combo-section-title" style="margin-top: 2px;">
-            <span id="schedule-section-title">📅 本日の予定</span>
-            <button class="btn-add-schedule-main" id="btn-add-schedule">➕ 予定を追加</button>
-          </div>
+          <!-- Bottom Section: Selected Date Schedule List (Always Visible) -->
+          <div class="widget-bottom-schedule-container" style="flex: 1; -webkit-flex: 1; min-height: 0; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; border-top: 1px solid rgba(255, 255, 255, 0.12); padding-top: 6px;">
+            <div class="combo-section-title" style="margin-bottom: 4px;">
+              <span id="schedule-section-title">📅 本日の予定</span>
+              <button class="btn-add-schedule-main" id="btn-add-schedule">➕ 予定を追加</button>
+            </div>
 
-          <div class="schedule-sub-list" id="schedule-items-container">
-            <!-- Dynamically populated schedule items -->
+            <div class="schedule-sub-list" id="schedule-items-container" style="flex: 1; -webkit-flex: 1; overflow-y: auto;">
+              <!-- Dynamically populated schedule items -->
+            </div>
           </div>
 
         </section>
@@ -2276,7 +2365,7 @@
           container.innerHTML = '';
 
           var daysCount = Math.min(timeDefines.length, 7);
-          for (var i = 0; i < daysCount; i++) {
+          for (var i = 1; i < daysCount; i++) {
             var d = new Date(timeDefines[i]);
             var dayName = dayNames[d.getDay()];
             var dayLabel = '';
@@ -2320,12 +2409,69 @@
             container.appendChild(pill);
           }
 
+          if (weatherCodes && weatherCodes.length > 0) {
+            updateTodayWeatherAdvices(weatherCodes[0], pops[0], tempsMax[0]);
+          }
+
           var subtitle = document.getElementById('jma-weekly-subtitle');
           if (subtitle && jmaData[1].publishingOffice) {
             subtitle.textContent = jmaData[1].publishingOffice + ' 発表 (仙台)';
           }
         } catch(err) {
           console.log('Error rendering JMA weekly forecast:', err);
+        }
+      }
+
+      function updateTodayWeatherAdvices(weatherCode, popMax, maxTemp) {
+        var rainAdviceElem = document.getElementById('today-rain-advice');
+        var clothingAdviceElem = document.getElementById('today-clothing-advice');
+        var laundryAdviceElem = document.getElementById('today-laundry-advice');
+
+        var isRainy = (weatherCode && (weatherCode.indexOf('3') === 0 || weatherCode.indexOf('4') === 0 || weatherCode === '202' || weatherCode === '212'));
+        popMax = (typeof popMax === 'number') ? popMax : parseInt(popMax || '10', 10);
+        maxTemp = (typeof maxTemp === 'number') ? maxTemp : parseFloat(maxTemp || '25');
+
+        // 1. Rain Gear Advice
+        if (rainAdviceElem) {
+          if (isRainy || popMax >= 50) {
+            rainAdviceElem.textContent = '☔ 傘をお持ちください (最高降水確率 ' + popMax + '%)';
+          } else if (popMax >= 30) {
+            rainAdviceElem.textContent = '🌂 折りたたみ傘があると安心です (最高降水確率 ' + popMax + '%)';
+          } else {
+            rainAdviceElem.textContent = '☀️ 傘は不要です (最高降水確率 ' + popMax + '%)';
+          }
+        }
+
+        // 2. Clothing Advice
+        if (clothingAdviceElem) {
+          if (maxTemp >= 28) {
+            clothingAdviceElem.textContent = '👕 真夏日の暑さです。半袖と熱中症対策でお過ごしください。';
+          } else if (maxTemp >= 24) {
+            clothingAdviceElem.textContent = '👕 半袖や薄手のシャツで過ごしやすい爽やかな陽気です。';
+          } else if (maxTemp >= 19) {
+            clothingAdviceElem.textContent = '👔 長袖シャツや薄手の羽織るものが丁度よい気候です。';
+          } else if (maxTemp >= 14) {
+            clothingAdviceElem.textContent = '🧥 カーディガンや秋物ジャケットがあると快適です。';
+          } else if (maxTemp >= 9) {
+            clothingAdviceElem.textContent = '🧥 セーターやコートでしっかり防寒してお出かけください。';
+          } else {
+            clothingAdviceElem.textContent = '🧥 厚手のダウンや冬物コートで防寒対策を万全に。';
+          }
+        }
+
+        // 3. Laundry Advice
+        if (laundryAdviceElem) {
+          if (isRainy || popMax >= 50) {
+            laundryAdviceElem.textContent = '🧺 部屋干しがおすすめです（雨や高い降水確率にご注意ください）。';
+          } else if (popMax >= 30) {
+            laundryAdviceElem.textContent = '🧺 屋根のあるベランダや軒下への外干しが安心です。';
+          } else if (maxTemp >= 23) {
+            laundryAdviceElem.textContent = '🧺 厚手の衣服やバスタオルもよく乾く絶好の洗濯日和です！';
+          } else if (maxTemp >= 15) {
+            laundryAdviceElem.textContent = '🧺 外干しでしっかり乾きます。';
+          } else {
+            laundryAdviceElem.textContent = '🧺 気温が低めのため、乾くのに時間を要する場合があります。';
+          }
         }
       }
 
@@ -2896,10 +3042,17 @@
       if (btnSaveEvent) {
         btnSaveEvent.addEventListener('click', saveNewEvent);
       }
+      var isImeComposing = false;
       var inputEventText = document.getElementById('input-event-text');
       if (inputEventText) {
+        inputEventText.addEventListener('compositionstart', function() {
+          isImeComposing = true;
+        });
+        inputEventText.addEventListener('compositionend', function() {
+          isImeComposing = false;
+        });
         inputEventText.addEventListener('keydown', function(e) {
-          if (e.key === 'Enter' || e.keyCode === 13) {
+          if ((e.key === 'Enter' || e.keyCode === 13) && !isImeComposing && !e.isComposing && e.keyCode !== 229) {
             e.preventDefault();
             saveNewEvent();
           }
@@ -3032,108 +3185,33 @@
       renderScheduleList();
 
       /* ------------------------------------------------------------------------
-         4. PHOTO SLIDESHOW MANAGER (ES2018 Compliant)
+         4. IPAD PHOTO SLIDESHOW MANAGER (ES2018 / iOS 12 Compliant)
          ------------------------------------------------------------------------ */
-      var albums = {
-        '1': [
-          {
-            url: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80',
-            title: 'Lake Motosu Sunset',
-            subtitle: '山梨県 - 本栖湖夕景',
-            tag: '富士山 & 本栖湖'
-          },
-          {
-            url: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80',
-            title: 'Mt. Fuji Morning Reflection',
-            subtitle: '山梨県 - 逆さ富士',
-            tag: '富士山 & 本栖湖'
-          },
-          {
-            url: 'https://images.unsplash.com/photo-1528164344705-47542687990d?auto=format&fit=crop&w=1200&q=80',
-            title: 'Mt. Fuji & Sakura',
-            subtitle: '山梨県 - 桜と富士山',
-            tag: '富士山 & 本栖湖'
-          }
-        ],
-        '2': [
-          {
-            url: 'https://images.unsplash.com/photo-1511884642898-4c92249e20b6?auto=format&fit=crop&w=1200&q=80',
-            title: 'Mystic Forest & Fog',
-            subtitle: '屋久島 - 原生林の静寂',
-            tag: '屋久島 神秘の森'
-          },
-          {
-            url: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80',
-            title: 'Arashiyama Bamboo Grove',
-            subtitle: '京都 - 嵐山竹林の小径',
-            tag: '京都 嵐山'
-          },
-          {
-            url: 'https://images.unsplash.com/photo-1542051841857-5f90071e7989?auto=format&fit=crop&w=1200&q=80',
-            title: 'Taisho Pond & Hotaka',
-            subtitle: '長野県 - 上高地 大正池',
-            tag: '上高地 絶景'
-          }
-        ],
-        '3': [
-          {
-            url: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=80',
-            title: 'Alpine Morning Glow',
-            subtitle: '北アルプス - 朝焼けの連峰',
-            tag: '北アルプス 朝景'
-          },
-          {
-            url: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1200&q=80',
-            title: 'Tokyo Night Panorama',
-            subtitle: '東京都 - 夜景パノラマ',
-            tag: '東京 煌めく夜景'
-          },
-          {
-            url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80',
-            title: 'Tropical Ocean Sunset',
-            subtitle: '沖縄県 - サンセットビーチ',
-            tag: '南国 リゾート'
-          }
-        ]
-      };
-
-      var currentAlbumId = '1';
-      var photos = albums[currentAlbumId];
+      var photos = [];
       var currentPhotoIndex = 0;
       var slideshowTimer = null;
-      var isSlideshowPlaying = true;
+      var isSlideshowPlaying = false;
 
-      function updateSlideBackgrounds() {
-        var slides = document.querySelectorAll('.photo-bg-slide');
-        for (var i = 0; i < slides.length; i++) {
-          if (photos[i]) {
-            slides[i].style.backgroundImage = "url('" + photos[i].url + "')";
-          }
-        }
-      }
+      var slidesContainer = document.getElementById('photo-slides-container');
+      var photoPlaceholder = document.getElementById('photo-empty-placeholder');
+      var inputIpadPhotos = document.getElementById('input-ipad-photos');
+      var btnSelectIpadPhotos = document.getElementById('btn-select-ipad-photos');
 
-      function switchAlbum(albumId) {
-        if (!albums[albumId]) { return; }
-        currentAlbumId = albumId;
-        photos = albums[currentAlbumId];
+      function renderPhotoSlides() {
+        if (!slidesContainer) { return; }
+        slidesContainer.innerHTML = '';
 
-        var pills = document.querySelectorAll('.album-pill');
-        for (var i = 0; i < pills.length; i++) {
-          pills[i].classList.remove('active');
-        }
-        var activePill = document.getElementById('btn-album-' + albumId);
-        if (activePill) {
-          activePill.classList.add('active');
-        }
-
-        updateSlideBackgrounds();
-        showPhoto(0);
-        if (isSlideshowPlaying) {
-          startSlideshow();
+        for (var i = 0; i < photos.length; i++) {
+          var slideDiv = document.createElement('div');
+          slideDiv.className = 'photo-bg-slide' + (i === 0 ? ' active' : '');
+          slideDiv.id = 'user-slide-' + i;
+          slideDiv.style.backgroundImage = "url('" + photos[i].url + "')";
+          slidesContainer.appendChild(slideDiv);
         }
       }
 
       function showPhoto(index) {
+        if (!photos || photos.length === 0) { return; }
         if (index < 0) {
           index = photos.length - 1;
         } else if (index >= photos.length) {
@@ -3141,7 +3219,7 @@
         }
         currentPhotoIndex = index;
 
-        var slides = document.querySelectorAll('.photo-bg-slide');
+        var slides = document.querySelectorAll('#photo-slides-container .photo-bg-slide');
         for (var i = 0; i < slides.length; i++) {
           if (i === currentPhotoIndex) {
             slides[i].classList.add('active');
@@ -3156,15 +3234,18 @@
         var tagElem = document.getElementById('photo-location-tag');
         var ambientBgElem = document.getElementById('ambient-photo-bg');
 
-        if (titleElem && photoData) { titleElem.textContent = photoData.title; }
-        if (subtitleElem && photoData) { subtitleElem.textContent = photoData.subtitle; }
-        if (tagElem && photoData) { tagElem.textContent = photoData.tag; }
+        if (currentMultiPurposeMode !== 'radar') {
+          if (titleElem && photoData) { titleElem.textContent = photoData.title; }
+          if (subtitleElem && photoData) { subtitleElem.textContent = photoData.subtitle; }
+          if (tagElem && photoData) { tagElem.textContent = photoData.tag; }
+        }
         if (ambientBgElem && photoData) {
           ambientBgElem.style.backgroundImage = "url('" + photoData.url + "')";
         }
       }
 
       function startSlideshow() {
+        if (!photos || photos.length <= 1) { return; }
         stopSlideshow();
         slideshowTimer = setInterval(function() {
           showPhoto(currentPhotoIndex + 1);
@@ -3196,12 +3277,53 @@
         }
       }
 
+      function handlePhotoSelection(files) {
+        if (!files || files.length === 0) { return; }
+        var newPhotos = [];
+        for (var i = 0; i < files.length; i++) {
+          var file = files[i];
+          try {
+            var url = URL.createObjectURL(file);
+            newPhotos.push({
+              url: url,
+              title: file.name ? file.name : ('写真 ' + (i + 1)),
+              subtitle: 'iPad 写真ライブラリ (' + (i + 1) + ' / ' + files.length + ')',
+              tag: '📷 iPad フォト'
+            });
+          } catch(e) {}
+        }
+
+        if (newPhotos.length > 0) {
+          photos = newPhotos;
+          if (photoPlaceholder) { photoPlaceholder.style.display = 'none'; }
+          renderPhotoSlides();
+          showPhoto(0);
+          startSlideshow();
+        }
+      }
+
+      if (btnSelectIpadPhotos) {
+        btnSelectIpadPhotos.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (inputIpadPhotos) { inputIpadPhotos.click(); }
+        });
+      }
+
+      if (photoPlaceholder) {
+        photoPlaceholder.addEventListener('click', function() {
+          if (inputIpadPhotos) { inputIpadPhotos.click(); }
+        });
+      }
+
+      if (inputIpadPhotos) {
+        inputIpadPhotos.addEventListener('change', function(e) {
+          handlePhotoSelection(e.target.files);
+        });
+      }
+
       var prevPhotoBtn = document.getElementById('btn-prev-photo');
       var nextPhotoBtn = document.getElementById('btn-next-photo');
       var toggleSlideshowBtn = document.getElementById('btn-toggle-slideshow');
-      var btnAlbum1 = document.getElementById('btn-album-1');
-      var btnAlbum2 = document.getElementById('btn-album-2');
-      var btnAlbum3 = document.getElementById('btn-album-3');
 
       if (prevPhotoBtn) {
         prevPhotoBtn.addEventListener('click', function() { showPhoto(currentPhotoIndex - 1); });
@@ -3217,12 +3339,106 @@
         });
       }
 
-      if (btnAlbum1) { btnAlbum1.addEventListener('click', function() { switchAlbum('1'); }); }
-      if (btnAlbum2) { btnAlbum2.addEventListener('click', function() { switchAlbum('2'); }); }
-      if (btnAlbum3) { btnAlbum3.addEventListener('click', function() { switchAlbum('3'); }); }
+      /* ------------------------------------------------------------------------
+         4.1 MULTI PURPOSE FRAME MODE SWITCHER (Photo vs Rain Radar)
+         ------------------------------------------------------------------------ */
+      var currentMultiPurposeMode = 'photo';
 
-      updateSlideBackgrounds();
-      startSlideshow();
+      function setMultiPurposeFrameMode(mode) {
+        currentMultiPurposeMode = mode;
+
+        var btnPhoto = document.getElementById('btn-tab-frame-photo');
+        var btnRadar = document.getElementById('btn-tab-frame-radar');
+        var radarContainer = document.getElementById('rain-radar-container');
+        var photoSlidesContainer = document.getElementById('photo-slides-container');
+        var photoPlaceholder = document.getElementById('photo-empty-placeholder');
+        var slideshowControls = document.getElementById('photo-slideshow-controls');
+        var btnSelectPhotos = document.getElementById('btn-select-ipad-photos');
+        var btnOpenJma = document.getElementById('btn-open-jma-web');
+        var titleElem = document.getElementById('photo-title');
+        var subtitleElem = document.getElementById('photo-subtitle');
+        var tagElem = document.getElementById('photo-location-tag');
+
+        var photoOverlay = document.getElementById('photo-overlay-layer');
+        var photoFooter = document.getElementById('photo-footer-layer');
+
+        if (mode === 'radar') {
+          if (btnPhoto) btnPhoto.classList.remove('active');
+          if (btnRadar) btnRadar.classList.add('active');
+
+          if (radarContainer) {
+            radarContainer.style.display = 'block';
+            radarContainer.style.zIndex = '2';
+          }
+          if (photoSlidesContainer) photoSlidesContainer.style.display = 'none';
+          if (photoPlaceholder) photoPlaceholder.style.display = 'none';
+          if (slideshowControls) slideshowControls.style.display = 'none';
+          if (photoOverlay) photoOverlay.style.display = 'none';
+          if (photoFooter) photoFooter.style.display = 'none';
+
+          if (btnSelectPhotos) btnSelectPhotos.style.display = 'none';
+          if (btnOpenJma) btnOpenJma.style.display = 'inline-flex';
+
+          stopSlideshow();
+          requestTurtleSpeedMode();
+        } else {
+          // Default: 'photo'
+          if (btnRadar) btnRadar.classList.remove('active');
+          if (btnPhoto) btnPhoto.classList.add('active');
+
+          if (radarContainer) radarContainer.style.display = 'none';
+          if (photoSlidesContainer) photoSlidesContainer.style.display = 'block';
+          if (photoPlaceholder && (!photos || photos.length === 0)) {
+            photoPlaceholder.style.display = 'flex';
+          }
+          if (slideshowControls) slideshowControls.style.display = 'flex';
+          if (photoOverlay) photoOverlay.style.display = 'block';
+          if (photoFooter) photoFooter.style.display = 'flex';
+
+          if (btnSelectPhotos) btnSelectPhotos.style.display = 'inline-flex';
+          if (btnOpenJma) btnOpenJma.style.display = 'none';
+
+          if (photos && photos.length > 0 && photos[currentPhotoIndex]) {
+            if (titleElem) titleElem.textContent = photos[currentPhotoIndex].title;
+            if (subtitleElem) subtitleElem.textContent = photos[currentPhotoIndex].subtitle;
+          } else {
+            if (titleElem) titleElem.textContent = 'マイフォトスライドショー';
+            if (subtitleElem) subtitleElem.textContent = 'iPad 写真ライブラリ';
+          }
+        }
+      }
+
+      var btnTabFramePhoto = document.getElementById('btn-tab-frame-photo');
+      var btnTabFrameRadar = document.getElementById('btn-tab-frame-radar');
+      var btnOpenJmaWeb = document.getElementById('btn-open-jma-web');
+
+      if (btnTabFramePhoto) {
+        btnTabFramePhoto.addEventListener('click', function() { setMultiPurposeFrameMode('photo'); });
+      }
+      if (btnTabFrameRadar) {
+        btnTabFrameRadar.addEventListener('click', function() { setMultiPurposeFrameMode('radar'); });
+      }
+      if (btnOpenJmaWeb) {
+        btnOpenJmaWeb.addEventListener('click', function() {
+          window.open('https://www.jma.go.jp/bosai/nowc/', '_blank', 'noopener,noreferrer');
+        });
+      }
+
+      function requestTurtleSpeedMode() {
+        var iframe = document.getElementById('rain-radar-iframe');
+        if (iframe && iframe.contentWindow) {
+          try {
+            iframe.contentWindow.postMessage({ type: 'updateEmbed', payload: { animSpeed: 'slow', animationSpeed: 0.5, speed: 'slow', turtle: true } }, '*');
+          } catch(e) {}
+        }
+      }
+
+      var radarIframe = document.getElementById('rain-radar-iframe');
+      if (radarIframe) {
+        radarIframe.addEventListener('load', function() {
+          requestTurtleSpeedMode();
+        });
+      }
 
       /* ------------------------------------------------------------------------
          5. SCHEDULE / TASK INTERACTIVITY
@@ -3410,7 +3626,10 @@
 
             if (item.link) {
               itemDiv.addEventListener('click', function() {
-                window.open(item.link, '_blank');
+                var win = window.open(item.link, '_blank', 'noopener,noreferrer');
+                if (win) {
+                  win.opener = null;
+                }
               });
             }
 
@@ -3464,6 +3683,182 @@
           fetchGoogleNewsFeed();
         });
       }
+
+      /* ------------------------------------------------------------------------
+         11. CALENDAR / GOOGLE NEWS CARD VIEW SWITCHER (ES2018 Compliant)
+         ------------------------------------------------------------------------ */
+      function setInfoCardMode(mode) {
+        var viewCal = document.getElementById('view-calendar');
+        var viewNews = document.getElementById('view-news');
+
+        var btnCal = document.getElementById('btn-tab-calendar');
+        var btnNews = document.getElementById('btn-tab-news');
+
+        var titleElem = document.getElementById('widget-switch-title');
+
+        if (viewCal) { viewCal.classList.remove('active'); }
+        if (viewNews) { viewNews.classList.remove('active'); }
+
+        if (btnCal) { btnCal.classList.remove('active'); }
+        if (btnNews) { btnNews.classList.remove('active'); }
+
+        if (mode === 'news') {
+          if (viewNews) { viewNews.classList.add('active'); }
+          if (btnNews) { btnNews.classList.add('active'); }
+          if (titleElem) { titleElem.textContent = '📰 Google ニュース'; }
+        } else {
+          // Default: 'calendar'
+          if (viewCal) { viewCal.classList.add('active'); }
+          if (btnCal) { btnCal.classList.add('active'); }
+          if (titleElem) { titleElem.textContent = '🗓️ カレンダー'; }
+        }
+      }
+
+      var btnTabCalendar = document.getElementById('btn-tab-calendar');
+      var btnTabNews = document.getElementById('btn-tab-news');
+
+      if (btnTabCalendar) {
+        btnTabCalendar.addEventListener('click', function() { setInfoCardMode('calendar'); });
+      }
+      if (btnTabNews) {
+        btnTabNews.addEventListener('click', function() { setInfoCardMode('news'); });
+      }
+
+      // Default view mode: Calendar
+      setInfoCardMode('calendar');
+
+      /* ------------------------------------------------------------------------
+         12. SCREEN AWAKE / SLEEP PREVENTION (iOS Silent Video Loop Method)
+         ------------------------------------------------------------------------ */
+      (function setupNoSleepVideo() {
+        var videoElem = null;
+        var wakeStatusElem = document.getElementById('wake-lock-status');
+        var wakeTextElem = document.getElementById('wake-lock-text');
+
+        function updateStatusUI(isActive) {
+          if (wakeStatusElem) {
+            if (isActive) {
+              wakeStatusElem.style.color = '#f59e0b';
+              wakeStatusElem.style.opacity = '1';
+              if (wakeTextElem) { wakeTextElem.textContent = '常時点灯'; }
+            } else {
+              wakeStatusElem.style.color = 'rgba(255, 255, 255, 0.4)';
+              wakeStatusElem.style.opacity = '0.6';
+              if (wakeTextElem) { wakeTextElem.textContent = '常時点灯'; }
+            }
+          }
+        }
+
+        function enableNoSleepVideo() {
+          if (videoElem) {
+            if (videoElem.paused) {
+              videoElem.play().then(function() {
+                updateStatusUI(true);
+              }).catch(function(e) {
+                console.log('Video play error:', e);
+              });
+            }
+            return;
+          }
+
+          try {
+            videoElem = document.createElement('video');
+            videoElem.setAttribute('playsinline', '');
+            videoElem.setAttribute('webkit-playsinline', '');
+            videoElem.setAttribute('loop', '');
+            videoElem.setAttribute('muted', '');
+            videoElem.muted = true;
+            videoElem.style.position = 'fixed';
+            videoElem.style.top = '-9999px';
+            videoElem.style.left = '-9999px';
+            videoElem.style.width = '1px';
+            videoElem.style.height = '1px';
+            videoElem.style.opacity = '0.01';
+            videoElem.style.pointerEvents = 'none';
+
+            // Minimal valid 1-frame silent base64 MP4 video
+            videoElem.src = 'data:video/mp4;base64,AAAAHGZ0eXBpc29tAAAAAGlzb21pc28ybXA0MgAAAAFtZGF0AAAAEGF2YzEAAQAU/yEAGgAAABhmoDYg0A80AAAAAQAAABgAAAAAZW5jdiAAAAA=';
+            document.body.appendChild(videoElem);
+
+            var promise = videoElem.play();
+            if (promise !== undefined) {
+              promise.then(function() {
+                updateStatusUI(true);
+              }).catch(function(err) {
+                console.log('Autoplay video waiting for user interaction:', err);
+              });
+            }
+          } catch (e) {
+            console.log('Video initialization error:', e);
+          }
+        }
+
+        // Re-enable video playback on page visibility change
+        document.addEventListener('visibilitychange', function() {
+          if (document.visibilityState === 'visible') {
+            enableNoSleepVideo();
+          }
+        });
+
+        // Trigger on user interaction to satisfy iOS Safari user gesture requirements
+        function playOnInteraction() {
+          enableNoSleepVideo();
+        }
+
+        document.addEventListener('touchstart', playOnInteraction, false);
+        document.addEventListener('click', playOnInteraction, false);
+
+        // Initial attempt
+        enableNoSleepVideo();
+      })();
+
+      /* ------------------------------------------------------------------------
+         13. BATTERY STATUS MONITOR (Battery Status API: navigator.getBattery)
+         ------------------------------------------------------------------------ */
+      (function setupBatteryStatus() {
+        var batteryElem = document.getElementById('battery-status');
+        var batteryText = document.getElementById('battery-text');
+
+        if (!batteryElem || !batteryText) return;
+
+        function updateBatteryUI(battery) {
+          var level = Math.round(battery.level * 100);
+          var isCharging = battery.charging;
+
+          batteryText.textContent = (isCharging ? '⚡ ' : '') + level + '%';
+          batteryElem.title = 'バッテリー: ' + level + '%' + (isCharging ? ' (充電中)' : '');
+
+          if (isCharging) {
+            batteryElem.style.color = '#10b981'; // Green charging
+          } else if (level <= 20) {
+            batteryElem.style.color = '#ef4444'; // Red low battery
+          } else {
+            batteryElem.style.color = 'rgba(255, 255, 255, 0.7)';
+          }
+        }
+
+        if ('getBattery' in navigator && typeof navigator.getBattery === 'function') {
+          navigator.getBattery().then(function(battery) {
+            updateBatteryUI(battery);
+
+            battery.addEventListener('levelchange', function() {
+              updateBatteryUI(battery);
+            });
+            battery.addEventListener('chargingchange', function() {
+              updateBatteryUI(battery);
+            });
+          }).catch(function(err) {
+            console.log('Battery API error:', err);
+            if (batteryElem) batteryElem.style.display = 'none';
+          });
+        } else {
+          // navigator.getBattery is not supported on iOS Safari / certain browsers
+          // Hide battery element when real battery status cannot be obtained
+          if (batteryElem) {
+            batteryElem.style.display = 'none';
+          }
+        }
+      })();
 
     })();
   </script>
