@@ -265,7 +265,8 @@
     }
 
     .date-display-row {
-      font-size: 24px;
+      font-size: 20px;
+      font-size: clamp(16px, 2.2vw, 22px);
       font-weight: 800;
       color: rgba(255, 255, 255, 0.95);
       margin-top: 10px;
@@ -276,7 +277,9 @@
       align-items: center;
       -webkit-justify-content: space-between;
       justify-content: space-between;
-      white-space: nowrap;
+      -webkit-flex-wrap: wrap;
+      flex-wrap: wrap;
+      gap: 6px 8px;
       border-top: 1px solid rgba(255, 255, 255, 0.08);
       padding-top: 8px;
       width: 100%;
@@ -284,6 +287,8 @@
 
     #clock-date-left {
       white-space: nowrap;
+      font-size: 20px;
+      font-size: clamp(16px, 2.2vw, 22px);
     }
 
     /* アナログ時計スタイル (適正サイズ調整・ボタン被り防止) */
@@ -1481,6 +1486,10 @@
         width: 104px !important;
         height: 104px !important;
       }
+
+      .date-display-row, #clock-date-left {
+        font-size: 17px !important;
+      }
     }
 
     @media screen and (max-width: 600px) {
@@ -1499,6 +1508,10 @@
       .analog-clock-svg {
         width: 90px !important;
         height: 90px !important;
+      }
+
+      .date-display-row, #clock-date-left {
+        font-size: 15px !important;
       }
     }
 
@@ -1634,7 +1647,7 @@
           <!-- Date Display & Clock Mode Switch Tabs Row -->
           <div class="date-display-row">
             <span id="clock-date-left" style="white-space: nowrap;">2026年9月29日 (火)</span>
-            <div class="tab-pills" style="margin-left: 12px; -webkit-flex-shrink: 0; flex-shrink: 0;">
+            <div class="tab-pills" style="-webkit-flex-shrink: 0; flex-shrink: 0;">
               <button class="tab-btn active" id="btn-clock-digital">🔢 デジタル</button>
               <button class="tab-btn" id="btn-clock-analog">🕒 アナログ</button>
             </div>
