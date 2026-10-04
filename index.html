@@ -18,6 +18,12 @@
       user-select: none;
     }
 
+    input, select, textarea {
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      pointer-events: auto !important;
+    }
+
     html, body {
       width: 100%;
       height: 100%;
@@ -1314,6 +1320,9 @@
       color: #ffffff;
       font-size: 13px;
       outline: none;
+      -webkit-user-select: text !important;
+      user-select: text !important;
+      pointer-events: auto !important;
     }
 
     .form-input:focus {
@@ -3003,7 +3012,13 @@
 
         var modal = document.getElementById('modal-add-event');
         if (modal) { modal.style.display = '-webkit-flex'; modal.style.display = 'flex'; }
-        if (textInput) { textInput.focus(); }
+        if (textInput) {
+          setTimeout(function() {
+            try {
+              textInput.focus();
+            } catch(e) {}
+          }, 100);
+        }
       }
 
       function closeAddEventModal() {
