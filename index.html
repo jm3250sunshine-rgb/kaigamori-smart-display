@@ -2459,16 +2459,67 @@
         if (!container || !jmaData || !jmaData[1]) { return; }
 
         try {
-          var weeklySeries = jmaData[1];
-          if (!weeklySeries || !weeklySeries.timeSeries) { return; }
+          var d0 = jmaData[0] || {};
+          var d1 = jmaData[1] || {};
 
-          var timeDefines = weeklySeries.timeSeries[0].timeDefines || [];
-          var areaWeather = weeklySeries.timeSeries[0].areas[0] || {};
+          // Extract Today & Tomorrow details from d0 (short-term forecast) for fallback when d1 has blank fields
+          var tomPopFallback = '';
+          var tomMinFallback = '';
+          var tomMaxFallback = '';
+          var todayWeatherCode = '';
+          var todayPopMax = '';
+          var todayMaxTemp = '';
+
+          if (d0.timeSeries) {
+            if (d0.timeSeries[0] && d0.timeSeries[0].areas && d0.timeSeries[0].areas[0]) {
+              var wCodes0 = d0.timeSeries[0].areas[0].weatherCodes || [];
+              if (wCodes0.length > 0) { todayWeatherCode = wCodes0[0]; }
+            }
+            if (d0.timeSeries[1] && d0.timeSeries[1].areas && d0.timeSeries[1].areas[0]) {
+              var pops0 = d0.timeSeries[1].areas[0].pops || [];
+              if (pops0.length >= 2) {
+                var todayPops = [parseInt(pops0[0], 10), parseInt(pops0[1], 10)].filter(function(n) { return !isNaN(n); });
+                if (todayPops.length > 0) { todayPopMax = Math.max.apply(Math, todayPops); }
+              }
+              if (pops0.length >= 6) {
+                var tomPopsArr = [];
+                for (var p = 2; p < 6; p++) {
+                  var pNum = parseInt(pops0[p], 10);
+                  if (!isNaN(pNum)) { tomPopsArr.push(pNum); }
+                }
+                if (tomPopsArr.length > 0) {
+                  tomPopFallback = Math.max.apply(Math, tomPopsArr) + '%';
+                }
+              }
+            }
+            if (d0.timeSeries[2] && d0.timeSeries[2].areas) {
+              var sendaiArea0 = null;
+              var areas0 = d0.timeSeries[2].areas;
+              for (var s = 0; s < areas0.length; s++) {
+                if (areas0[s].area && areas0[s].area.name === '仙台') {
+                  sendaiArea0 = areas0[s];
+                  break;
+                }
+              }
+              if (!sendaiArea0 && areas0.length > 0) { sendaiArea0 = areas0[0]; }
+              if (sendaiArea0 && sendaiArea0.temps) {
+                if (sendaiArea0.temps[0]) { todayMaxTemp = sendaiArea0.temps[0]; }
+                if (sendaiArea0.temps[2]) { tomMinFallback = sendaiArea0.temps[2] + '°'; }
+                if (sendaiArea0.temps[3]) { tomMaxFallback = sendaiArea0.temps[3] + '°'; }
+              }
+            }
+          }
+
+          var weeklySeries = (d1.timeSeries && d1.timeSeries[0]) ? d1.timeSeries[0] : null;
+          if (!weeklySeries) { return; }
+
+          var timeDefines = weeklySeries.timeDefines || [];
+          var areaWeather = (weeklySeries.areas && weeklySeries.areas[0]) ? weeklySeries.areas[0] : {};
           var weatherCodes = areaWeather.weatherCodes || [];
           var pops = areaWeather.pops || [];
 
           var tempArea = null;
-          var tempSeriesAreas = (weeklySeries.timeSeries[1] && weeklySeries.timeSeries[1].areas) ? weeklySeries.timeSeries[1].areas : [];
+          var tempSeriesAreas = (d1.timeSeries[1] && d1.timeSeries[1].areas) ? d1.timeSeries[1].areas : [];
           for (var a = 0; a < tempSeriesAreas.length; a++) {
             if (tempSeriesAreas[a].area && tempSeriesAreas[a].area.name === '仙台') {
               tempArea = tempSeriesAreas[a];
@@ -2484,23 +2535,38 @@
 
           container.innerHTML = '';
 
+          var todayZero = new Date();
+          todayZero.setHours(0, 0, 0, 0);
+
           var daysCount = Math.min(timeDefines.length, 7);
-          for (var i = 1; i < daysCount; i++) {
+          for (var i = 0; i < daysCount; i++) {
             var d = new Date(timeDefines[i]);
+            var targetZero = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+            var diffDays = Math.round((targetZero.getTime() - todayZero.getTime()) / 86400000);
+
             var dayName = dayNames[d.getDay()];
             var dayLabel = '';
-            if (i === 0) {
+            if (diffDays === 0) {
               dayLabel = '今日(' + dayName + ')';
-            } else if (i === 1) {
+            } else if (diffDays === 1) {
               dayLabel = '明日(' + dayName + ')';
             } else {
               dayLabel = (d.getMonth() + 1) + '/' + d.getDate() + '(' + dayName + ')';
             }
 
             var wInfo = getJMAWeatherInfo(weatherCodes[i]);
-            var popVal = pops[i] ? pops[i] + '%' : '--';
-            var maxT = tempsMax[i] ? tempsMax[i] + '°' : '--';
-            var minT = tempsMin[i] ? tempsMin[i] + '°' : '--';
+
+            var popVal = pops[i] ? pops[i] + '%' : '';
+            if (!popVal && i === 0 && tomPopFallback) { popVal = tomPopFallback; }
+            if (!popVal) { popVal = '--'; }
+
+            var minT = tempsMin[i] ? tempsMin[i] + '°' : '';
+            if (!minT && i === 0 && tomMinFallback) { minT = tomMinFallback; }
+            if (!minT) { minT = '--'; }
+
+            var maxT = tempsMax[i] ? tempsMax[i] + '°' : '';
+            if (!maxT && i === 0 && tomMaxFallback) { maxT = tomMaxFallback; }
+            if (!maxT) { maxT = '--'; }
 
             var pill = document.createElement('div');
             pill.className = 'weekly-pill';
@@ -2529,13 +2595,14 @@
             container.appendChild(pill);
           }
 
-          if (weatherCodes && weatherCodes.length > 0) {
-            updateTodayWeatherAdvices(weatherCodes[0], pops[0], tempsMax[0]);
-          }
+          var codeForAdv = todayWeatherCode || (weatherCodes.length > 0 ? weatherCodes[0] : '');
+          var popForAdv = todayPopMax || (pops.length > 0 ? pops[0] : 10);
+          var tempForAdv = todayMaxTemp || (tempsMax.length > 0 ? tempsMax[0] : 25);
+          updateTodayWeatherAdvices(codeForAdv, popForAdv, tempForAdv);
 
           var subtitle = document.getElementById('jma-weekly-subtitle');
-          if (subtitle && jmaData[1].publishingOffice) {
-            subtitle.textContent = jmaData[1].publishingOffice + ' 発表 (仙台)';
+          if (subtitle && d1.publishingOffice) {
+            subtitle.textContent = d1.publishingOffice + ' 発表 (仙台)';
           }
         } catch(err) {
           console.log('Error rendering JMA weekly forecast:', err);
