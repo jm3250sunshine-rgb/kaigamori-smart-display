@@ -280,18 +280,18 @@
       white-space: nowrap;
     }
 
-    /* 拡大版アナログ時計スタイル */
+    /* アナログ時計スタイル (適正サイズ調整・ボタン被り防止) */
     .analog-clock-box {
       display: none;
       -webkit-align-items: center;
       align-items: center;
-      margin-bottom: 2px;
+      padding: 4px 0;
     }
 
     .analog-clock-svg {
-      width: 220px;
-      height: 220px;
-      filter: drop-shadow(0 6px 18px rgba(0,0,0,0.5));
+      width: 124px;
+      height: 124px;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
     }
 
     /* Weather Top Right Group & Non-Overflow Box */
@@ -1467,6 +1467,11 @@
         font-size: 24px !important;
         margin-left: 4px !important;
       }
+
+      .analog-clock-svg {
+        width: 104px !important;
+        height: 104px !important;
+      }
     }
 
     @media screen and (max-width: 600px) {
@@ -1480,6 +1485,11 @@
 
       .time-seconds {
         font-size: 18px !important;
+      }
+
+      .analog-clock-svg {
+        width: 90px !important;
+        height: 90px !important;
       }
     }
 
