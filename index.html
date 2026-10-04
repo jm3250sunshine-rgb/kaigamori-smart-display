@@ -2257,10 +2257,72 @@
         return num < 10 ? '0' + num : '' + num;
       }
 
+      function getYYYYMMDD(year, monthIndex, dateNum) {
+        var m = monthIndex + 1;
+        var d = dateNum;
+        return year + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
+      }
+
+      var todayRealDateObj = new Date();
+      var todayRealYear = todayRealDateObj.getFullYear();
+      var todayRealMonth = todayRealDateObj.getMonth();
+      var todayRealDay = todayRealDateObj.getDate();
+
+      var currentCalendarYear = todayRealYear;
+      var currentCalendarMonth = todayRealMonth;
+      var selectedDateStr = getYYYYMMDD(todayRealYear, todayRealMonth, todayRealDay);
+
+      var lastCheckedDateKey = selectedDateStr;
+
+      function checkDateChange(nowObj) {
+        var currentDateKey = getYYYYMMDD(nowObj.getFullYear(), nowObj.getMonth(), nowObj.getDate());
+        if (currentDateKey !== lastCheckedDateKey) {
+          var prevDateKey = lastCheckedDateKey;
+          lastCheckedDateKey = currentDateKey;
+
+          // Update real today state variables
+          todayRealDateObj = nowObj;
+          todayRealYear = nowObj.getFullYear();
+          todayRealMonth = nowObj.getMonth();
+          todayRealDay = nowObj.getDate();
+
+          // Auto-advance selected date if user was viewing previous today's schedule
+          if (selectedDateStr === prevDateKey) {
+            selectedDateStr = currentDateKey;
+          }
+
+          // Auto-advance calendar view if it was on previous today's month
+          if (currentCalendarYear === todayRealYear && (currentCalendarMonth === (todayRealMonth - 1 + 12) % 12)) {
+            currentCalendarMonth = todayRealMonth;
+          }
+
+          // Refresh Calendar UI
+          if (typeof renderCalendar === 'function') {
+            renderCalendar();
+          }
+
+          // Refresh Schedule UI
+          if (typeof renderScheduleList === 'function') {
+            renderScheduleList();
+          }
+
+          // Refresh Weather Forecast (JMA API)
+          if (typeof fetchJMAWeeklyForecast === 'function') {
+            fetchJMAWeeklyForecast();
+          }
+
+          // Refresh Google News Feed
+          if (typeof fetchGoogleNewsFeed === 'function') {
+            fetchGoogleNewsFeed();
+          }
+        }
+      }
+
       var currentClockMode = 'digital'; // 'digital' or 'analog'
 
       function updateClock() {
         var now = new Date();
+        checkDateChange(now);
         var rawHours = now.getHours();
         var rawMinutes = now.getMinutes();
         var rawSeconds = now.getSeconds();
@@ -2553,6 +2615,11 @@
       setClockMode('digital');
       fetchJMAWeeklyForecast();
 
+      // Refresh weather forecast every 30 minutes
+      setInterval(function() {
+        fetchJMAWeeklyForecast();
+      }, 1800000);
+
       /* ------------------------------------------------------------------------
          2. COMPACT MUSIC & NHK RADIO MEDIA PLAYER MANAGER (ES2018 Compliant)
          ------------------------------------------------------------------------ */
@@ -2828,22 +2895,6 @@
       /* ------------------------------------------------------------------------
          3. MONTHLY CALENDAR & INTERACTIVE SCHEDULE MANAGER (ES2018 Compliant)
          ------------------------------------------------------------------------ */
-      var todayRealDateObj = new Date();
-      var todayRealYear = todayRealDateObj.getFullYear();
-      var todayRealMonth = todayRealDateObj.getMonth();
-      var todayRealDay = todayRealDateObj.getDate();
-
-      var currentCalendarYear = todayRealYear;
-      var currentCalendarMonth = todayRealMonth;
-
-      function getYYYYMMDD(year, monthIndex, dateNum) {
-        var m = monthIndex + 1;
-        var d = dateNum;
-        return year + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
-      }
-
-      var selectedDateStr = getYYYYMMDD(todayRealYear, todayRealMonth, todayRealDay);
-
       var STORAGE_KEY = 'smart_display_events_v2';
       var defaultEventsMap = {};
       defaultEventsMap[selectedDateStr] = [
