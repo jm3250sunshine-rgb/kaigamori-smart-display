@@ -2074,23 +2074,17 @@
 
           <div class="photo-header">
             <div style="display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-flex-wrap: wrap; flex-wrap: wrap; gap: 4px 6px;">
-              <div class="tab-pills" style="margin-right: 2px;">
+              <div class="tab-pills" style="margin-right: 6px;">
                 <button class="tab-btn active" id="btn-tab-frame-photo">📷 フォト</button>
-                <button class="tab-btn" id="btn-tab-frame-radar">🌧️ 雨雲</button>
+                <button class="tab-btn" id="btn-tab-frame-radar">🌧️ 雨雲レーダー</button>
               </div>
 
-              <!-- Radar Sub-Mode Selector (Visible in Radar Mode: Future Forecast vs Past Radar) -->
-              <div class="tab-pills" id="radar-sub-pills" style="margin-right: 2px; display: none;">
-                <button class="tab-btn active" id="btn-radar-sub-forecast">🌧️ 雨雲予想 (+6h先)</button>
-                <button class="tab-btn" id="btn-radar-sub-past">📡 実況 (過去1h)</button>
-              </div>
-
-              <button class="icon-btn" id="btn-select-ipad-photos" style="padding: 3px 8px; font-size:11px; margin-right: 2px; background: rgba(59, 130, 246, 0.35); border-color: rgba(59, 130, 246, 0.6);">
+              <button class="icon-btn" id="btn-select-ipad-photos" style="padding: 3px 8px; font-size:11px; margin-right: 6px; background: rgba(59, 130, 246, 0.35); border-color: rgba(59, 130, 246, 0.6);">
                 📷 写真を選択
               </button>
               <input type="file" id="input-ipad-photos" accept="image/*" multiple style="display:none;">
 
-              <button class="icon-btn" id="btn-open-jma-web" style="padding: 3px 8px; font-size:11px; margin-right: 2px; background: rgba(16, 185, 129, 0.35); border-color: rgba(16, 185, 129, 0.6); display: none;">
+              <button class="icon-btn" id="btn-open-jma-web" style="padding: 3px 8px; font-size:11px; margin-right: 6px; background: rgba(16, 185, 129, 0.35); border-color: rgba(16, 185, 129, 0.6); display: none;">
                 🔗 気象庁Web
               </button>
 
@@ -3544,39 +3538,12 @@
          4.1 MULTI PURPOSE FRAME MODE SWITCHER (Photo vs Rain Radar)
          ------------------------------------------------------------------------ */
       var currentMultiPurposeMode = 'photo';
-      var currentRadarSubMode = 'forecast'; // 'forecast' (+6h future) or 'past' (past 1h)
-
-      var RADAR_URL_FORECAST = 'https://embed.windy.com/embed2.html?lat=38.2688&lon=140.8719&detailLat=38.2688&detailLon=140.8719&width=600&height=400&zoom=10&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default';
-      var RADAR_URL_PAST = 'https://embed.windy.com/embed2.html?lat=38.2688&lon=140.8719&detailLat=38.2688&detailLon=140.8719&width=600&height=400&zoom=10&level=surface&overlay=radar&product=radar&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1';
-
-      function setRadarSubMode(subMode) {
-        currentRadarSubMode = subMode;
-        var btnForecast = document.getElementById('btn-radar-sub-forecast');
-        var btnPast = document.getElementById('btn-radar-sub-past');
-        var iframe = document.getElementById('rain-radar-iframe');
-
-        if (subMode === 'past') {
-          if (btnForecast) btnForecast.classList.remove('active');
-          if (btnPast) btnPast.classList.add('active');
-          if (iframe && iframe.src !== RADAR_URL_PAST) {
-            iframe.src = RADAR_URL_PAST;
-          }
-        } else {
-          // Default: 'forecast' (current time -> +6h future forecast)
-          if (btnPast) btnPast.classList.remove('active');
-          if (btnForecast) btnForecast.classList.add('active');
-          if (iframe && iframe.src !== RADAR_URL_FORECAST) {
-            iframe.src = RADAR_URL_FORECAST;
-          }
-        }
-      }
 
       function setMultiPurposeFrameMode(mode) {
         currentMultiPurposeMode = mode;
 
         var btnPhoto = document.getElementById('btn-tab-frame-photo');
         var btnRadar = document.getElementById('btn-tab-frame-radar');
-        var radarSubPills = document.getElementById('radar-sub-pills');
         var radarContainer = document.getElementById('rain-radar-container');
         var photoSlidesContainer = document.getElementById('photo-slides-container');
         var photoPlaceholder = document.getElementById('photo-empty-placeholder');
@@ -3594,11 +3561,6 @@
           if (btnPhoto) btnPhoto.classList.remove('active');
           if (btnRadar) btnRadar.classList.add('active');
 
-          if (radarSubPills) {
-            radarSubPills.style.display = '-webkit-flex';
-            radarSubPills.style.display = 'flex';
-          }
-
           if (radarContainer) {
             radarContainer.style.display = 'block';
             radarContainer.style.zIndex = '2';
@@ -3613,14 +3575,12 @@
           if (btnOpenJma) btnOpenJma.style.display = 'inline-flex';
 
           stopSlideshow();
-          setRadarSubMode(currentRadarSubMode);
           requestTurtleSpeedMode();
         } else {
           // Default: 'photo'
           if (btnRadar) btnRadar.classList.remove('active');
           if (btnPhoto) btnPhoto.classList.add('active');
 
-          if (radarSubPills) radarSubPills.style.display = 'none';
           if (radarContainer) radarContainer.style.display = 'none';
           if (photoSlidesContainer) photoSlidesContainer.style.display = 'block';
           if (photoPlaceholder && (!photos || photos.length === 0)) {
@@ -3645,8 +3605,6 @@
 
       var btnTabFramePhoto = document.getElementById('btn-tab-frame-photo');
       var btnTabFrameRadar = document.getElementById('btn-tab-frame-radar');
-      var btnRadarSubForecast = document.getElementById('btn-radar-sub-forecast');
-      var btnRadarSubPast = document.getElementById('btn-radar-sub-past');
       var btnOpenJmaWeb = document.getElementById('btn-open-jma-web');
 
       if (btnTabFramePhoto) {
@@ -3654,12 +3612,6 @@
       }
       if (btnTabFrameRadar) {
         btnTabFrameRadar.addEventListener('click', function() { setMultiPurposeFrameMode('radar'); });
-      }
-      if (btnRadarSubForecast) {
-        btnRadarSubForecast.addEventListener('click', function() { setRadarSubMode('forecast'); });
-      }
-      if (btnRadarSubPast) {
-        btnRadarSubPast.addEventListener('click', function() { setRadarSubMode('past'); });
       }
       if (btnOpenJmaWeb) {
         btnOpenJmaWeb.addEventListener('click', function() {
