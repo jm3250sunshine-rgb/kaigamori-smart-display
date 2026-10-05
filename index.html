@@ -2056,15 +2056,14 @@
 
           <!-- Rain Radar Live Map Container (Kaigamori 4-chome Focused: 5km Radius, Star Marker) -->
           <div id="rain-radar-container" style="position: absolute; top:0; left:0; width:100%; height:100%; display:none; z-index: 2;">
-            <div style="position: absolute; top: 10px; left: 10px; z-index: 10; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(245, 158, 11, 0.6); border-radius: 20px; padding: 4px 10px; font-size: 11px; font-weight: 700; color: #fbbf24; pointer-events: none; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">⭐ 仙台市青葉区貝ヶ森4丁目16-6 (半径5km)</div>
-            <button id="btn-reset-radar-map" style="position: absolute; top: 10px; right: 10px; z-index: 10; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 20px; padding: 4px 10px; font-size: 11px; font-weight: 700; color: #ffffff; cursor: pointer; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">🔄 位置を戻す (5km)</button>
+            <div style="position: absolute; top: 48px; left: 10px; z-index: 10; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(245, 158, 11, 0.6); border-radius: 20px; padding: 4px 10px; font-size: 11px; font-weight: 700; color: #fbbf24; pointer-events: none; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">⭐ 仙台市青葉区貝ヶ森4丁目16-6 (半径5km)</div>
             <iframe id="rain-radar-iframe" src="https://embed.windy.com/embed2.html?lat=38.2830&lon=140.8400&detailLat=38.2830&detailLon=140.8400&width=600&height=400&zoom=12&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default" style="width:100%; height:100%; border:0; pointer-events:auto;"></iframe>
           </div>
 
           <!-- Typhoon Info Container (JMA Weather Charts & Windy Wind/Pressure Forecast) -->
           <div id="typhoon-info-container" style="position: absolute; top:0; left:0; width:100%; height:100%; display:none; z-index: 3; background: #0f172a; overflow: hidden;">
-            <!-- Sub-Header Control Pills for Typhoon View -->
-            <div style="position: absolute; top: 10px; left: 10px; right: 10px; z-index: 10; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: space-between; justify-content: space-between; gap: 6px; -webkit-flex-wrap: wrap; flex-wrap: wrap; pointer-events: none;">
+            <!-- Sub-Header Control Pills for Typhoon View (Placed at top: 48px below main header) -->
+            <div style="position: absolute; top: 48px; left: 10px; right: 10px; z-index: 10; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: space-between; justify-content: space-between; gap: 6px; -webkit-flex-wrap: wrap; flex-wrap: wrap; pointer-events: none;">
               <div style="display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 6px; -webkit-flex-wrap: wrap; flex-wrap: wrap; pointer-events: auto;">
                 <div class="tab-pills" style="background: rgba(15, 23, 42, 0.85); border-color: rgba(239, 68, 68, 0.4); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);">
                   <button class="tab-btn active" id="btn-typhoon-sub-windy">🌀 広域風・気圧予想</button>
@@ -2081,9 +2080,6 @@
                   <button class="tab-btn" id="btn-jma-map-ft48">48h予想</button>
                 </div>
               </div>
-
-              <!-- Reset / Return View Button for Typhoon Map -->
-              <button id="btn-reset-typhoon-map" style="background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 20px; padding: 4px 10px; font-size: 11px; font-weight: 700; color: #ffffff; cursor: pointer; pointer-events: auto; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">🔄 初期表示に戻す</button>
             </div>
 
             <!-- Typhoon View A: Windy Wide Area Wind Stream & Pressure Map -->
@@ -2092,7 +2088,7 @@
             </div>
 
             <!-- Typhoon View B: Official JMA Weather & Typhoon Forecast Chart -->
-            <div id="typhoon-jma-view" style="width: 100%; height: 100%; display: none; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; overflow: auto; padding: 48px 12px 12px 12px; background: #0f172a;">
+            <div id="typhoon-jma-view" style="width: 100%; height: 100%; display: none; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; overflow: auto; padding: 86px 12px 12px 12px; background: #0f172a;">
               <img id="jma-weather-map-img" src="" alt="気象庁 天気図・台風進路予想" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.6);" />
             </div>
           </div>
@@ -2110,26 +2106,37 @@
 
           <div class="photo-overlay" id="photo-overlay-layer"></div>
 
-          <div class="photo-header">
-            <div style="display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-flex-wrap: wrap; flex-wrap: wrap; gap: 4px 6px;">
-              <div class="tab-pills" style="margin-right: 6px;">
+          <!-- Main Top Header Bar (position: absolute at top: 10px, z-index: 20) -->
+          <div class="photo-header" style="position: absolute; top: 10px; left: 10px; right: 10px; z-index: 20; padding: 0;">
+            <div style="display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; -webkit-justify-content: space-between; justify-content: space-between; width: 100%; -webkit-flex-wrap: wrap; flex-wrap: wrap; gap: 4px 6px;">
+              <div class="tab-pills">
                 <button class="tab-btn active" id="btn-tab-frame-photo">📷 フォト</button>
                 <button class="tab-btn" id="btn-tab-frame-radar">🌧️ 雨雲レーダー</button>
                 <button class="tab-btn" id="btn-tab-frame-typhoon">🌀 台風情報</button>
               </div>
 
-              <button class="icon-btn" id="btn-select-ipad-photos" style="padding: 3px 8px; font-size:11px; margin-right: 6px; background: rgba(59, 130, 246, 0.35); border-color: rgba(59, 130, 246, 0.6);">
-                📷 写真を選択
-              </button>
-              <input type="file" id="input-ipad-photos" accept="image/*" multiple style="display:none;">
+              <div style="display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 4px;">
+                <button class="icon-btn" id="btn-select-ipad-photos" style="padding: 3px 8px; font-size:11px; background: rgba(59, 130, 246, 0.35); border-color: rgba(59, 130, 246, 0.6);">
+                  📷 写真を選択
+                </button>
+                <input type="file" id="input-ipad-photos" accept="image/*" multiple style="display:none;">
 
-              <button class="icon-btn" id="btn-open-jma-web" style="padding: 3px 8px; font-size:11px; margin-right: 6px; background: rgba(16, 185, 129, 0.35); border-color: rgba(16, 185, 129, 0.6); display: none;">
-                🔗 気象庁Web
-              </button>
+                <button class="icon-btn" id="btn-reset-radar-map" style="padding: 3px 8px; font-size:11px; background: rgba(15, 23, 42, 0.85); border-color: rgba(255, 255, 255, 0.25); display: none;">
+                  🔄 位置を戻す (5km)
+                </button>
 
-              <button class="icon-btn" id="btn-expand-photo" style="padding: 3px 7px; font-size:11px;">
-                全画面
-              </button>
+                <button class="icon-btn" id="btn-reset-typhoon-map" style="padding: 3px 8px; font-size:11px; background: rgba(15, 23, 42, 0.85); border-color: rgba(255, 255, 255, 0.25); display: none;">
+                  🔄 初期表示に戻す
+                </button>
+
+                <button class="icon-btn" id="btn-open-jma-web" style="padding: 3px 8px; font-size:11px; background: rgba(16, 185, 129, 0.35); border-color: rgba(16, 185, 129, 0.6); display: none;">
+                  🔗 気象庁Web
+                </button>
+
+                <button class="icon-btn" id="btn-expand-photo" style="padding: 3px 7px; font-size:11px;">
+                  全画面
+                </button>
+              </div>
             </div>
           </div>
 
@@ -3682,6 +3689,8 @@
         var slideshowControls = document.getElementById('photo-slideshow-controls');
         var btnSelectPhotos = document.getElementById('btn-select-ipad-photos');
         var btnOpenJma = document.getElementById('btn-open-jma-web');
+        var btnResetRadar = document.getElementById('btn-reset-radar-map');
+        var btnResetTyphoon = document.getElementById('btn-reset-typhoon-map');
         var titleElem = document.getElementById('photo-title');
         var subtitleElem = document.getElementById('photo-subtitle');
         var tagElem = document.getElementById('photo-location-tag');
@@ -3706,6 +3715,8 @@
           if (photoFooter) photoFooter.style.display = 'none';
 
           if (btnSelectPhotos) btnSelectPhotos.style.display = 'none';
+          if (btnResetRadar) btnResetRadar.style.display = 'none';
+          if (btnResetTyphoon) btnResetTyphoon.style.display = 'inline-flex';
           if (btnOpenJma) {
             btnOpenJma.style.display = 'inline-flex';
             btnOpenJma.textContent = '🔗 気象庁 台風Web';
@@ -3730,6 +3741,8 @@
           if (photoFooter) photoFooter.style.display = 'none';
 
           if (btnSelectPhotos) btnSelectPhotos.style.display = 'none';
+          if (btnResetTyphoon) btnResetTyphoon.style.display = 'none';
+          if (btnResetRadar) btnResetRadar.style.display = 'inline-flex';
           if (btnOpenJma) {
             btnOpenJma.style.display = 'inline-flex';
             btnOpenJma.textContent = '🔗 気象庁 雨雲Web';
@@ -3754,6 +3767,8 @@
           if (photoFooter) photoFooter.style.display = 'flex';
 
           if (btnSelectPhotos) btnSelectPhotos.style.display = 'inline-flex';
+          if (btnResetRadar) btnResetRadar.style.display = 'none';
+          if (btnResetTyphoon) btnResetTyphoon.style.display = 'none';
           if (btnOpenJma) btnOpenJma.style.display = 'none';
 
           if (photos && photos.length > 0 && photos[currentPhotoIndex]) {
