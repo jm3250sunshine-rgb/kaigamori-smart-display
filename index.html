@@ -2060,6 +2060,32 @@
             <iframe id="rain-radar-iframe" src="https://embed.windy.com/embed2.html?lat=38.2830&lon=140.8400&detailLat=38.2830&detailLon=140.8400&width=600&height=400&zoom=12&level=surface&overlay=rain&product=ecmwf&menu=&message=&marker=true&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default" style="width:100%; height:100%; border:0; pointer-events:auto;"></iframe>
           </div>
 
+          <!-- Typhoon Info Container (JMA Weather Charts & Windy Wind/Pressure Forecast) -->
+          <div id="typhoon-info-container" style="position: absolute; top:0; left:0; width:100%; height:100%; display:none; z-index: 3; background: #0f172a; overflow: hidden;">
+            <!-- Sub-Header Control Pills for Typhoon View -->
+            <div style="position: absolute; top: 10px; left: 10px; z-index: 10; display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 6px; -webkit-flex-wrap: wrap; flex-wrap: wrap;">
+              <div class="tab-pills" style="background: rgba(15, 23, 42, 0.85); border-color: rgba(239, 68, 68, 0.4); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);">
+                <button class="tab-btn active" id="btn-typhoon-sub-windy">🌀 広域風・気圧予想</button>
+                <button class="tab-btn" id="btn-typhoon-sub-jma">🗺️ 気象庁 公式天気図</button>
+              </div>
+              <div class="tab-pills" id="jma-chart-type-pills" style="background: rgba(15, 23, 42, 0.85); border-color: rgba(255, 255, 255, 0.15); display: none; -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);">
+                <button class="tab-btn active" id="btn-jma-map-now">実況</button>
+                <button class="tab-btn" id="btn-jma-map-ft24">24h予想</button>
+                <button class="tab-btn" id="btn-jma-map-ft48">48h予想</button>
+              </div>
+            </div>
+
+            <!-- Typhoon View A: Windy Wide Area Wind Stream & Pressure Map -->
+            <div id="typhoon-windy-view" style="width: 100%; height: 100%; display: block;">
+              <iframe id="typhoon-windy-iframe" src="https://embed.windy.com/embed2.html?lat=30.0000&lon=135.0000&detailLat=30.0000&detailLon=135.0000&width=600&height=400&zoom=5&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=false&calendar=now&pressure=true&type=map&location=coordinates&detail=&metricWind=m%2Fs&metricTemp=default" style="width:100%; height:100%; border:0; pointer-events:auto;"></iframe>
+            </div>
+
+            <!-- Typhoon View B: Official JMA Weather & Typhoon Forecast Chart -->
+            <div id="typhoon-jma-view" style="width: 100%; height: 100%; display: none; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; overflow: auto; padding: 48px 12px 12px 12px; background: #0f172a;">
+              <img id="jma-weather-map-img" src="" alt="気象庁 天気図・台風進路予想" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.6);" />
+            </div>
+          </div>
+
           <!-- Empty State Placeholder (Visible when no photos selected yet) -->
           <div class="photo-empty-placeholder" id="photo-empty-placeholder" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: -webkit-flex; display: flex; -webkit-flex-direction: column; flex-direction: column; -webkit-align-items: center; align-items: center; -webkit-justify-content: center; justify-content: center; background: rgba(15, 23, 42, 0.85); z-index: 2; text-align: center; padding: 16px; cursor: pointer;">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.5" style="margin-bottom: 8px;">
@@ -2078,6 +2104,7 @@
               <div class="tab-pills" style="margin-right: 6px;">
                 <button class="tab-btn active" id="btn-tab-frame-photo">📷 フォト</button>
                 <button class="tab-btn" id="btn-tab-frame-radar">🌧️ 雨雲レーダー</button>
+                <button class="tab-btn" id="btn-tab-frame-typhoon">🌀 台風情報</button>
               </div>
 
               <button class="icon-btn" id="btn-select-ipad-photos" style="padding: 3px 8px; font-size:11px; margin-right: 6px; background: rgba(59, 130, 246, 0.35); border-color: rgba(59, 130, 246, 0.6);">
@@ -3536,16 +3563,109 @@
       }
 
       /* ------------------------------------------------------------------------
-         4.1 MULTI PURPOSE FRAME MODE SWITCHER (Photo vs Rain Radar)
+         4.1 MULTI PURPOSE FRAME MODE SWITCHER (Photo vs Rain Radar vs Typhoon)
          ------------------------------------------------------------------------ */
       var currentMultiPurposeMode = 'photo';
+      var currentTyphoonSubView = 'windy';
+      var currentJMAPathType = 'now';
+
+      var jmaMapUrls = {
+        now: '',
+        ft24: '',
+        ft48: ''
+      };
+
+      function fetchJMAWeatherMaps() {
+        var url = 'https://www.jma.go.jp/bosai/weather_map/data/list.json';
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4 && xhr.status === 200) {
+            try {
+              var data = JSON.parse(xhr.responseText);
+              if (data && data.near) {
+                var baseUrl = 'https://www.jma.go.jp/bosai/weather_map/data/png/';
+                if (data.near.now && data.near.now.length > 0) {
+                  jmaMapUrls.now = baseUrl + data.near.now[data.near.now.length - 1];
+                }
+                if (data.near.ft24 && data.near.ft24.length > 0) {
+                  jmaMapUrls.ft24 = baseUrl + data.near.ft24[data.near.ft24.length - 1];
+                }
+                if (data.near.ft48 && data.near.ft48.length > 0) {
+                  jmaMapUrls.ft48 = baseUrl + data.near.ft48[data.near.ft48.length - 1];
+                }
+                setJMAType(currentJMAPathType);
+              }
+            } catch(e) {}
+          }
+        };
+        xhr.send();
+      }
+
+      function setJMAType(type) {
+        currentJMAPathType = type;
+        var imgElem = document.getElementById('jma-weather-map-img');
+        var btnNow = document.getElementById('btn-jma-map-now');
+        var btn24 = document.getElementById('btn-jma-map-ft24');
+        var btn48 = document.getElementById('btn-jma-map-ft48');
+
+        if (btnNow) btnNow.classList.remove('active');
+        if (btn24) btn24.classList.remove('active');
+        if (btn48) btn48.classList.remove('active');
+
+        if (type === 'ft24') {
+          if (btn24) btn24.classList.add('active');
+          if (imgElem && jmaMapUrls.ft24) imgElem.src = jmaMapUrls.ft24;
+        } else if (type === 'ft48') {
+          if (btn48) btn48.classList.add('active');
+          if (imgElem && jmaMapUrls.ft48) imgElem.src = jmaMapUrls.ft48;
+        } else {
+          // Default: 'now'
+          if (btnNow) btnNow.classList.add('active');
+          if (imgElem && jmaMapUrls.now) imgElem.src = jmaMapUrls.now;
+        }
+      }
+
+      function setTyphoonSubView(subView) {
+        currentTyphoonSubView = subView;
+        var btnWindy = document.getElementById('btn-typhoon-sub-windy');
+        var btnJma = document.getElementById('btn-typhoon-sub-jma');
+        var windyView = document.getElementById('typhoon-windy-view');
+        var jmaView = document.getElementById('typhoon-jma-view');
+        var jmaPills = document.getElementById('jma-chart-type-pills');
+
+        if (subView === 'jma') {
+          if (btnWindy) btnWindy.classList.remove('active');
+          if (btnJma) btnJma.classList.add('active');
+          if (windyView) windyView.style.display = 'none';
+          if (jmaView) {
+            jmaView.style.display = '-webkit-flex';
+            jmaView.style.display = 'flex';
+          }
+          if (jmaPills) {
+            jmaPills.style.display = '-webkit-flex';
+            jmaPills.style.display = 'flex';
+          }
+          fetchJMAWeatherMaps();
+        } else {
+          // Default: 'windy'
+          if (btnJma) btnJma.classList.remove('active');
+          if (btnWindy) btnWindy.classList.add('active');
+          if (jmaView) jmaView.style.display = 'none';
+          if (jmaPills) jmaPills.style.display = 'none';
+          if (windyView) windyView.style.display = 'block';
+        }
+      }
 
       function setMultiPurposeFrameMode(mode) {
         currentMultiPurposeMode = mode;
 
         var btnPhoto = document.getElementById('btn-tab-frame-photo');
         var btnRadar = document.getElementById('btn-tab-frame-radar');
+        var btnTyphoon = document.getElementById('btn-tab-frame-typhoon');
+
         var radarContainer = document.getElementById('rain-radar-container');
+        var typhoonContainer = document.getElementById('typhoon-info-container');
         var photoSlidesContainer = document.getElementById('photo-slides-container');
         var photoPlaceholder = document.getElementById('photo-empty-placeholder');
         var slideshowControls = document.getElementById('photo-slideshow-controls');
@@ -3558,14 +3678,16 @@
         var photoOverlay = document.getElementById('photo-overlay-layer');
         var photoFooter = document.getElementById('photo-footer-layer');
 
-        if (mode === 'radar') {
+        if (mode === 'typhoon') {
           if (btnPhoto) btnPhoto.classList.remove('active');
-          if (btnRadar) btnRadar.classList.add('active');
+          if (btnRadar) btnRadar.classList.remove('active');
+          if (btnTyphoon) btnTyphoon.classList.add('active');
 
-          if (radarContainer) {
-            radarContainer.style.display = 'block';
-            radarContainer.style.zIndex = '2';
+          if (typhoonContainer) {
+            typhoonContainer.style.display = 'block';
+            typhoonContainer.style.zIndex = '3';
           }
+          if (radarContainer) radarContainer.style.display = 'none';
           if (photoSlidesContainer) photoSlidesContainer.style.display = 'none';
           if (photoPlaceholder) photoPlaceholder.style.display = 'none';
           if (slideshowControls) slideshowControls.style.display = 'none';
@@ -3573,16 +3695,45 @@
           if (photoFooter) photoFooter.style.display = 'none';
 
           if (btnSelectPhotos) btnSelectPhotos.style.display = 'none';
-          if (btnOpenJma) btnOpenJma.style.display = 'inline-flex';
+          if (btnOpenJma) {
+            btnOpenJma.style.display = 'inline-flex';
+            btnOpenJma.textContent = '🔗 気象庁 台風Web';
+          }
+
+          stopSlideshow();
+          setTyphoonSubView(currentTyphoonSubView);
+        } else if (mode === 'radar') {
+          if (btnPhoto) btnPhoto.classList.remove('active');
+          if (btnTyphoon) btnTyphoon.classList.remove('active');
+          if (btnRadar) btnRadar.classList.add('active');
+
+          if (radarContainer) {
+            radarContainer.style.display = 'block';
+            radarContainer.style.zIndex = '2';
+          }
+          if (typhoonContainer) typhoonContainer.style.display = 'none';
+          if (photoSlidesContainer) photoSlidesContainer.style.display = 'none';
+          if (photoPlaceholder) photoPlaceholder.style.display = 'none';
+          if (slideshowControls) slideshowControls.style.display = 'none';
+          if (photoOverlay) photoOverlay.style.display = 'none';
+          if (photoFooter) photoFooter.style.display = 'none';
+
+          if (btnSelectPhotos) btnSelectPhotos.style.display = 'none';
+          if (btnOpenJma) {
+            btnOpenJma.style.display = 'inline-flex';
+            btnOpenJma.textContent = '🔗 気象庁 雨雲Web';
+          }
 
           stopSlideshow();
           requestTurtleSpeedMode();
         } else {
           // Default: 'photo'
           if (btnRadar) btnRadar.classList.remove('active');
+          if (btnTyphoon) btnTyphoon.classList.remove('active');
           if (btnPhoto) btnPhoto.classList.add('active');
 
           if (radarContainer) radarContainer.style.display = 'none';
+          if (typhoonContainer) typhoonContainer.style.display = 'none';
           if (photoSlidesContainer) photoSlidesContainer.style.display = 'block';
           if (photoPlaceholder && (!photos || photos.length === 0)) {
             photoPlaceholder.style.display = 'flex';
@@ -3606,6 +3757,13 @@
 
       var btnTabFramePhoto = document.getElementById('btn-tab-frame-photo');
       var btnTabFrameRadar = document.getElementById('btn-tab-frame-radar');
+      var btnTabFrameTyphoon = document.getElementById('btn-tab-frame-typhoon');
+
+      var btnTyphoonSubWindy = document.getElementById('btn-typhoon-sub-windy');
+      var btnTyphoonSubJma = document.getElementById('btn-typhoon-sub-jma');
+      var btnJMAMapNow = document.getElementById('btn-jma-map-now');
+      var btnJMAMapFT24 = document.getElementById('btn-jma-map-ft24');
+      var btnJMAMapFT48 = document.getElementById('btn-jma-map-ft48');
       var btnOpenJmaWeb = document.getElementById('btn-open-jma-web');
 
       if (btnTabFramePhoto) {
@@ -3614,9 +3772,34 @@
       if (btnTabFrameRadar) {
         btnTabFrameRadar.addEventListener('click', function() { setMultiPurposeFrameMode('radar'); });
       }
+      if (btnTabFrameTyphoon) {
+        btnTabFrameTyphoon.addEventListener('click', function() { setMultiPurposeFrameMode('typhoon'); });
+      }
+
+      if (btnTyphoonSubWindy) {
+        btnTyphoonSubWindy.addEventListener('click', function() { setTyphoonSubView('windy'); });
+      }
+      if (btnTyphoonSubJma) {
+        btnTyphoonSubJma.addEventListener('click', function() { setTyphoonSubView('jma'); });
+      }
+
+      if (btnJMAMapNow) {
+        btnJMAMapNow.addEventListener('click', function() { setJMAType('now'); });
+      }
+      if (btnJMAMapFT24) {
+        btnJMAMapFT24.addEventListener('click', function() { setJMAType('ft24'); });
+      }
+      if (btnJMAMapFT48) {
+        btnJMAMapFT48.addEventListener('click', function() { setJMAType('ft48'); });
+      }
+
       if (btnOpenJmaWeb) {
         btnOpenJmaWeb.addEventListener('click', function() {
-          window.open('https://www.jma.go.jp/bosai/nowc/', '_blank', 'noopener,noreferrer');
+          if (currentMultiPurposeMode === 'typhoon') {
+            window.open('https://www.jma.go.jp/bosai/typhoon/', '_blank', 'noopener,noreferrer');
+          } else {
+            window.open('https://www.jma.go.jp/bosai/nowc/', '_blank', 'noopener,noreferrer');
+          }
         });
       }
 
