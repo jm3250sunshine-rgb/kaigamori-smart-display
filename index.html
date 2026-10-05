@@ -3610,16 +3610,21 @@
           if (xhr.readyState === 4 && xhr.status === 200) {
             try {
               var data = JSON.parse(xhr.responseText);
-              if (data && data.near) {
-                var baseUrl = 'https://www.jma.go.jp/bosai/weather_map/data/png/';
-                if (data.near.now && data.near.now.length > 0) {
-                  jmaMapUrls.now = baseUrl + data.near.now[data.near.now.length - 1];
+              var baseUrl = 'https://www.jma.go.jp/bosai/weather_map/data/png/';
+              var target = (data && data.near) ? data.near : ((data && data.near_monochrome) ? data.near_monochrome : data);
+              if (target) {
+                if (target.now && target.now.length > 0) {
+                  jmaMapUrls.now = baseUrl + target.now[target.now.length - 1];
                 }
-                if (data.near.ft24 && data.near.ft24.length > 0) {
-                  jmaMapUrls.ft24 = baseUrl + data.near.ft24[data.near.ft24.length - 1];
+                if (target.ft24 && target.ft24.length > 0) {
+                  jmaMapUrls.ft24 = baseUrl + target.ft24[target.ft24.length - 1];
+                } else if (target.f24 && target.f24.length > 0) {
+                  jmaMapUrls.ft24 = baseUrl + target.f24[target.f24.length - 1];
                 }
-                if (data.near.ft48 && data.near.ft48.length > 0) {
-                  jmaMapUrls.ft48 = baseUrl + data.near.ft48[data.near.ft48.length - 1];
+                if (target.ft48 && target.ft48.length > 0) {
+                  jmaMapUrls.ft48 = baseUrl + target.ft48[target.ft48.length - 1];
+                } else if (target.f48 && target.f48.length > 0) {
+                  jmaMapUrls.ft48 = baseUrl + target.f48[target.f48.length - 1];
                 }
                 setJMAType(currentJMAPathType);
               }
@@ -3640,16 +3645,21 @@
         if (btn24) btn24.classList.remove('active');
         if (btn48) btn48.classList.remove('active');
 
+        var targetUrl = jmaMapUrls[type] || '';
+
         if (type === 'ft24') {
           if (btn24) btn24.classList.add('active');
-          if (imgElem && jmaMapUrls.ft24) imgElem.src = jmaMapUrls.ft24;
         } else if (type === 'ft48') {
           if (btn48) btn48.classList.add('active');
-          if (imgElem && jmaMapUrls.ft48) imgElem.src = jmaMapUrls.ft48;
         } else {
           // Default: 'now'
           if (btnNow) btnNow.classList.add('active');
-          if (imgElem && jmaMapUrls.now) imgElem.src = jmaMapUrls.now;
+        }
+
+        if (imgElem && targetUrl) {
+          imgElem.src = targetUrl;
+        } else if (!targetUrl) {
+          fetchJMAWeatherMaps();
         }
       }
 
@@ -3879,40 +3889,11 @@
       var btnTabFrameRadar = document.getElementById('btn-tab-frame-radar');
       var btnTabFrameTyphoon = document.getElementById('btn-tab-frame-typhoon');
 
+      var btnTyphoonSubWindy = document.getElementById('btn-typhoon-sub-windy');
       var btnTyphoonSubJma = document.getElementById('btn-typhoon-sub-jma');
       var btnTyphoonLayerWind = document.getElementById('btn-typhoon-layer-wind');
       var btnTyphoonLayerRain = document.getElementById('btn-typhoon-layer-rain');
       var btnTyphoonLayerSat = document.getElementById('btn-typhoon-layer-sat');
-
-      var btnJMAMapNow = document.getElementById('btn-jma-map-now');
-      var btnJMAMapFT24 = document.getElementById('btn-jma-map-ft24');
-      var btnJMAMapFT48 = document.getElementById('btn-jma-map-ft48');
-      var btnResetTyphoonMap = document.getElementById('btn-reset-typhoon-map');
-      var btnResetRadarMap = document.getElementById('btn-reset-radar-map');
-      var btnOpenJmaWeb = document.getElementById('btn-open-jma-web');
-
-      if (btnTabFramePhoto) {
-        btnTabFramePhoto.addEventListener('click', function() { setMultiPurposeFrameMode('photo'); });
-      }
-      if (btnTabFrameRadar) {
-        btnTabFrameRadar.addEventListener('click', function() { setMultiPurposeFrameMode('radar'); });
-      }
-      if (btnTabFrameTyphoon) {
-        btnTabFrameTyphoon.addEventListener('click', function() { setMultiPurposeFrameMode('typhoon'); });
-      }
-
-      if (btnTyphoonSubJma) {
-        btnTyphoonSubJma.addEventListener('click', function() { setTyphoonLayer('jma'); });
-      }
-      if (btnTyphoonLayerWind) {
-        btnTyphoonLayerWind.addEventListener('click', function() { setTyphoonLayer('wind'); });
-      }
-      if (btnTyphoonLayerRain) {
-        btnTyphoonLayerRain.addEventListener('click', function() { setTyphoonLayer('rain'); });
-      }
-      if (btnTyphoonLayerSat) {
-        btnTyphoonLayerSat.addEventListener('click', function() { setTyphoonLayer('sat'); });
-      }
 
       var btnJMAMapNow = document.getElementById('btn-jma-map-now');
       var btnJMAMapFT24 = document.getElementById('btn-jma-map-ft24');
@@ -3936,7 +3917,7 @@
         btnTyphoonSubWindy.addEventListener('click', function() { setTyphoonSubView('windy'); });
       }
       if (btnTyphoonSubJma) {
-        btnTyphoonSubJma.addEventListener('click', function() { setTyphoonSubView('jma'); });
+        btnTyphoonSubJma.addEventListener('click', function() { setTyphoonLayer('jma'); });
       }
 
       if (btnTyphoonLayerWind) {
@@ -3977,6 +3958,9 @@
           window.open('https://www.jma.go.jp/bosai/nowc/', '_blank', 'noopener,noreferrer');
         });
       }
+
+      // Pre-fetch JMA weather maps so 24h/48h buttons are ready immediately
+      fetchJMAWeatherMaps();
 
       function requestTurtleSpeedMode() {
         var iframe = document.getElementById('rain-radar-iframe');
